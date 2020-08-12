@@ -2,6 +2,7 @@ import x_pb2
 from Communicator import Communicator
 from RewardAdversarial import RewardAdversarial
 
+
 class DecisionMaker:
     def __init__(self):
         self._communicator = Communicator()
@@ -28,14 +29,14 @@ class DecisionMaker:
         #     self._communicator.add_message(toSimMessage)
 
         if message.HasField("request"):
-            print(message)
+            #print(message)
             if self.ra_pid != '':
-                print(self.ra_pid)
                 messageToAdd = self.ra_agent.getUpdate()
                 self._communicator.add_message(messageToAdd, self.ra_pid, "TrafficGeneratorParameters")
             self._communicator.send()
 
         if message.HasField("info"):
+            print(message.info.tick_length)
             self._communicator.set_push_socket(message.info.ipaddress)
 
         if message.HasField("register_communicator"):
