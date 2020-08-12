@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+message RegisterCommunicator {
+  string name = 1;
+  string pid = 2;
+}
+
+message TrafficGeneratorParameters{
+    string distribution_period = 1;
+    repeated float parameters_period = 2;
+    string distribution_execution_time = 3;
+    repeated float parameters_execution_time = 4;
+}
+
+message MessageRequest {
+    string message = 1;
+}
+
+message SimulationInfo {
+    string name = 1;
+    int32 simulation_length = 2;
+    float tick_length = 3;
+    string ipaddress = 4;
+}
+
+message ToPythonMessage {
+    int32 transfer_id = 1;
+    int32 tick_offset = 2;
+    string pid_sender = 3;
+    oneof payload {
+        MessageRequest request = 4;
+        SimulationInfo info = 5;
+        RegisterCommunicator register_communicator = 6;
+    }
+}
+
+message ToSimulationMessage {
+    int32 transfer_id = 1;
+    string pid_receiver = 2;
+    oneof payload {
+        TrafficGeneratorParameters traffic_generator_params = 3;
+    }
+}
+
+message ResponseSimulation {
+    repeated ToSimulationMessage messages = 1;
+}
+
