@@ -1,12 +1,15 @@
 import x_pb2
 from Communicator import Communicator
 from RewardAdversarial import RewardAdversarial
-
+from TimeManagment import TimeManagement
+import datetime
 
 class DecisionMaker:
     def __init__(self):
         self._communicator = Communicator()
         self._communicator.add_notifier(lambda m: self.handle_message(m))
+
+        self._timemanager = TimeManagement()
 
         self.ra_pid = ''
         self.ra_agent = RewardAdversarial()
@@ -28,6 +31,8 @@ class DecisionMaker:
         #     toSimMessage.pid_receiver = message.pid_sender
         #     self._communicator.add_message(toSimMessage)
 
+        self._timemanager.updateTime(message.tick_offset)
+
         if message.HasField("request"):
             #print(message)
             if self.ra_pid != '':
@@ -36,13 +41,15 @@ class DecisionMaker:
             self._communicator.send()
 
         if message.HasField("info"):
-            print(message.info.tick_length)
             self._communicator.set_push_socket(message.info.ipaddress)
+            self._timemanager.initializeTime(message.info.tick_length)
 
         if message.HasField("register_communicator"):
             print(message)
             self.ra_pid = message.register_communicator.pid
 
+        if message.HasField("counter"):
+            print(message)
 
 if __name__ == "__main__":
     messagehandler = DecisionMaker()

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='x.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\x9c\x01\n\x1aTrafficGeneratorParameters\x12\x1b\n\x13\x64istribution_period\x18\x01 \x01(\t\x12\x19\n\x11parameters_period\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"\xd7\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x42\t\n\x07payload\"\x8c\x01\n\x13ToSimulationMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x14\n\x0cpid_receiver\x18\x02 \x01(\t\x12?\n\x18traffic_generator_params\x18\x03 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x42\t\n\x07payload\"<\n\x12ResponseSimulation\x12&\n\x08messages\x18\x01 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
+  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\x9c\x01\n\x1aTrafficGeneratorParameters\x12\x1b\n\x13\x64istribution_period\x18\x01 \x01(\t\x12\x19\n\x11parameters_period\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"4\n\x07\x43ounter\x12\x1a\n\x12\x61\x63tor_type_counter\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02\"\xf4\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1b\n\x07\x63ounter\x18\x07 \x01(\x0b\x32\x08.CounterH\x00\x42\t\n\x07payload\"\x8c\x01\n\x13ToSimulationMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x14\n\x0cpid_receiver\x18\x02 \x01(\t\x12?\n\x18traffic_generator_params\x18\x03 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x42\t\n\x07payload\"<\n\x12ResponseSimulation\x12&\n\x08messages\x18\x01 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -199,6 +199,44 @@ _SIMULATIONINFO = _descriptor.Descriptor(
 )
 
 
+_COUNTER = _descriptor.Descriptor(
+  name='Counter',
+  full_name='Counter',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='actor_type_counter', full_name='Counter.actor_type_counter', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='Counter.value', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=355,
+  serialized_end=407,
+)
+
+
 _TOPYTHONMESSAGE = _descriptor.Descriptor(
   name='ToPythonMessage',
   full_name='ToPythonMessage',
@@ -248,6 +286,13 @@ _TOPYTHONMESSAGE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='counter', full_name='ToPythonMessage.counter', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -263,8 +308,8 @@ _TOPYTHONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToPythonMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=356,
-  serialized_end=571,
+  serialized_start=410,
+  serialized_end=654,
 )
 
 
@@ -311,8 +356,8 @@ _TOSIMULATIONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToSimulationMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=574,
-  serialized_end=714,
+  serialized_start=657,
+  serialized_end=797,
 )
 
 
@@ -342,13 +387,14 @@ _RESPONSESIMULATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=716,
-  serialized_end=776,
+  serialized_start=799,
+  serialized_end=859,
 )
 
 _TOPYTHONMESSAGE.fields_by_name['request'].message_type = _MESSAGEREQUEST
 _TOPYTHONMESSAGE.fields_by_name['info'].message_type = _SIMULATIONINFO
 _TOPYTHONMESSAGE.fields_by_name['register_communicator'].message_type = _REGISTERCOMMUNICATOR
+_TOPYTHONMESSAGE.fields_by_name['counter'].message_type = _COUNTER
 _TOPYTHONMESSAGE.oneofs_by_name['payload'].fields.append(
   _TOPYTHONMESSAGE.fields_by_name['request'])
 _TOPYTHONMESSAGE.fields_by_name['request'].containing_oneof = _TOPYTHONMESSAGE.oneofs_by_name['payload']
@@ -358,6 +404,9 @@ _TOPYTHONMESSAGE.fields_by_name['info'].containing_oneof = _TOPYTHONMESSAGE.oneo
 _TOPYTHONMESSAGE.oneofs_by_name['payload'].fields.append(
   _TOPYTHONMESSAGE.fields_by_name['register_communicator'])
 _TOPYTHONMESSAGE.fields_by_name['register_communicator'].containing_oneof = _TOPYTHONMESSAGE.oneofs_by_name['payload']
+_TOPYTHONMESSAGE.oneofs_by_name['payload'].fields.append(
+  _TOPYTHONMESSAGE.fields_by_name['counter'])
+_TOPYTHONMESSAGE.fields_by_name['counter'].containing_oneof = _TOPYTHONMESSAGE.oneofs_by_name['payload']
 _TOSIMULATIONMESSAGE.fields_by_name['traffic_generator_params'].message_type = _TRAFFICGENERATORPARAMETERS
 _TOSIMULATIONMESSAGE.oneofs_by_name['payload'].fields.append(
   _TOSIMULATIONMESSAGE.fields_by_name['traffic_generator_params'])
@@ -367,6 +416,7 @@ DESCRIPTOR.message_types_by_name['RegisterCommunicator'] = _REGISTERCOMMUNICATOR
 DESCRIPTOR.message_types_by_name['TrafficGeneratorParameters'] = _TRAFFICGENERATORPARAMETERS
 DESCRIPTOR.message_types_by_name['MessageRequest'] = _MESSAGEREQUEST
 DESCRIPTOR.message_types_by_name['SimulationInfo'] = _SIMULATIONINFO
+DESCRIPTOR.message_types_by_name['Counter'] = _COUNTER
 DESCRIPTOR.message_types_by_name['ToPythonMessage'] = _TOPYTHONMESSAGE
 DESCRIPTOR.message_types_by_name['ToSimulationMessage'] = _TOSIMULATIONMESSAGE
 DESCRIPTOR.message_types_by_name['ResponseSimulation'] = _RESPONSESIMULATION
@@ -398,6 +448,13 @@ SimulationInfo = _reflection.GeneratedProtocolMessageType('SimulationInfo', (_me
   # @@protoc_insertion_point(class_scope:SimulationInfo)
   ))
 _sym_db.RegisterMessage(SimulationInfo)
+
+Counter = _reflection.GeneratedProtocolMessageType('Counter', (_message.Message,), dict(
+  DESCRIPTOR = _COUNTER,
+  __module__ = 'x_pb2'
+  # @@protoc_insertion_point(class_scope:Counter)
+  ))
+_sym_db.RegisterMessage(Counter)
 
 ToPythonMessage = _reflection.GeneratedProtocolMessageType('ToPythonMessage', (_message.Message,), dict(
   DESCRIPTOR = _TOPYTHONMESSAGE,

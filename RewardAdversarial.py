@@ -29,7 +29,7 @@ class RewardAdversarial:
             if self.execution_time_params[0] == 15:
                 self.execution_time_params = [5]
             else:
-                self.execution_time_params = [15]
+                self.execution_time_params = [5]
             time.sleep(0.5)
 
     def run(self):
