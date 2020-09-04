@@ -4,9 +4,10 @@ from RewardAdversarial import RewardAdversarial
 from TimeManagment import TimeManagement
 import datetime
 
-class DecisionMaker:
+
+class CommunicationRA:
     def __init__(self):
-        self._communicator = Communicator()
+        self._communicator = Communicator(5558, 5559)
         self._communicator.add_notifier(lambda m: self.handle_message(m))
 
         self._timemanager = TimeManagement()
@@ -30,7 +31,6 @@ class DecisionMaker:
         #     toSimMessage.transfer_id = message.transfer_id
         #     toSimMessage.pid_receiver = message.pid_sender
         #     self._communicator.add_message(toSimMessage)
-
         self._timemanager.updateTime(message.tick_offset)
 
         if message.HasField("request"):
@@ -48,9 +48,7 @@ class DecisionMaker:
             print(message)
             self.ra_pid = message.register_communicator.pid
 
-        if message.HasField("counter"):
-            print(message)
 
 if __name__ == "__main__":
-    messagehandler = DecisionMaker()
+    messagehandler = CommunicationRA()
     messagehandler.run()

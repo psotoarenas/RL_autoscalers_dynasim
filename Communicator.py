@@ -2,17 +2,16 @@
 import zmq
 import x_pb2
 
-PUSH_PORT = 5559
-PULL_PORT = 5558
-AI_PUSH = "tcp://143.129.83.94:{}".format(PUSH_PORT)
-AI_PULL = "tcp://143.129.83.94:{}".format(PULL_PORT)
-
-
 class Communicator:
 
-    def __init__(self):
+    def __init__(self, push_port, pull_port):
 
         self._context = zmq.Context(1)
+        self.push_port = push_port
+        self.pull_port = pull_port
+        self.ai_push = "tcp://143.129.83.94:{}".format(push_port)
+        self.ai_pull = "tcp://143.129.83.94:{}".format(pull_port)
+
         self._listen_socket = self._context.socket(zmq.PULL)
         self._speak_socket = self._context.socket(zmq.PUSH)
 
@@ -23,7 +22,7 @@ class Communicator:
         self._keep_running = False
 
     def __enter__(self):
-        self._listen_socket.bind(AI_PULL)
+        self._listen_socket.bind(self.ai_pull)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._listen_socket.close()
@@ -38,7 +37,7 @@ class Communicator:
             self._receive()
 
     def set_push_socket(self, ipaddress):
-        ai_push = "tcp://{}:{}".format(ipaddress, PUSH_PORT)
+        ai_push = "tcp://{}:{}".format(ipaddress, self.push_port)
         self._speak_socket.connect(ai_push)
         print(ipaddress)
 
