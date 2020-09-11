@@ -34,13 +34,14 @@ class CommunicationRA:
         self._timemanager.updateTime(message.tick_offset)
 
         if message.HasField("request"):
-            #print(message)
+            print(message)
             if self.ra_pid != '':
                 messageToAdd = self.ra_agent.getUpdate()
                 self._communicator.add_message(messageToAdd, self.ra_pid, "TrafficGeneratorParameters")
             self._communicator.send()
 
         if message.HasField("info"):
+            print(message)
             self._communicator.set_push_socket(message.info.ipaddress)
             self._timemanager.initializeTime(message.info.tick_length)
 

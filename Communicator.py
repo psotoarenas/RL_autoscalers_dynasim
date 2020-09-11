@@ -41,11 +41,12 @@ class Communicator:
         self._speak_socket.connect(ai_push)
         print(ipaddress)
 
-    def add_message(self, message, target, payload):
-        toSimMessage = x_pb2.ToSimulationMessage()
-
-        if payload == "TrafficGeneratorParameters":
-            toSimMessage.traffic_generator_params.CopyFrom(message)
+    def add_message(self, toSimMessage, target):
+        #toSimMessage = x_pb2.ToSimulationMessage()
+        #if payload == "TrafficGeneratorParameters":
+        #    toSimMessage.traffic_generator_params.CopyFrom(message)
+        #elif payload == "NotReady":
+        #    toSimMessage.not_ready.CopyFrom(message)
 
         toSimMessage.transfer_id = 1
         toSimMessage.pid_receiver = target

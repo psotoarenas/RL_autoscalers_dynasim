@@ -16,6 +16,10 @@ message MessageRequest {
     string message = 1;
 }
 
+message NotReady {
+    string message = 1;
+}
+
 message SimulationInfo {
     string name = 1;
     int32 simulation_length = 2;
@@ -24,12 +28,18 @@ message SimulationInfo {
 }
 
 message Counter {
-    string actor_type_counter = 1;
-    float value = 2;
+    string actor_name = 1;
+    string metric = 2;
+    float value = 3;
 }
 
 message Counters {
     repeated Counter counters = 1;
+}
+
+message CreateActor {
+    string type = 1;
+    int32 amount = 2;
 }
 
 message ToPythonMessage {
@@ -49,6 +59,8 @@ message ToSimulationMessage {
     string pid_receiver = 2;
     oneof payload {
         TrafficGeneratorParameters traffic_generator_params = 3;
+        NotReady not_ready = 4;
+        CreateActor create_actor = 5;
     }
 }
 
