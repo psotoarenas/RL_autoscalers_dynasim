@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='x.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\x9c\x01\n\x1aTrafficGeneratorParameters\x12\x1b\n\x13\x64istribution_period\x18\x01 \x01(\t\x12\x19\n\x11parameters_period\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1b\n\x08NotReady\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"<\n\x07\x43ounter\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x0e\n\x06metric\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x02\"&\n\x08\x43ounters\x12\x1a\n\x08\x63ounters\x18\x01 \x03(\x0b\x32\x08.Counter\"+\n\x0b\x43reateActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\"\xf6\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1d\n\x08\x63ounters\x18\x07 \x01(\x0b\x32\t.CountersH\x00\x42\t\n\x07payload\"\xd2\x01\n\x13ToSimulationMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x14\n\x0cpid_receiver\x18\x02 \x01(\t\x12?\n\x18traffic_generator_params\x18\x03 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x12\x1e\n\tnot_ready\x18\x04 \x01(\x0b\x32\t.NotReadyH\x00\x12$\n\x0c\x63reate_actor\x18\x05 \x01(\x0b\x32\x0c.CreateActorH\x00\x42\t\n\x07payload\"<\n\x12ResponseSimulation\x12&\n\x08messages\x18\x01 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
+  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\xcc\x01\n\x1aTrafficGeneratorParameters\x12\x19\n\x11\x64istribution_rate\x18\x01 \x01(\t\x12\x17\n\x0fparameters_rate\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\x12\x19\n\x11\x64istribution_size\x18\x05 \x01(\t\x12\x17\n\x0fparameters_size\x18\x06 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1b\n\x08NotReady\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"<\n\x07\x43ounter\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x0e\n\x06metric\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x02\"&\n\x08\x43ounters\x12\x1a\n\x08\x63ounters\x18\x01 \x03(\x0b\x32\x08.Counter\"+\n\x0b\x43reateActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\"\xf6\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1d\n\x08\x63ounters\x18\x07 \x01(\x0b\x32\t.CountersH\x00\x42\t\n\x07payload\"\xd2\x01\n\x13ToSimulationMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x14\n\x0cpid_receiver\x18\x02 \x01(\t\x12?\n\x18traffic_generator_params\x18\x03 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x12\x1e\n\tnot_ready\x18\x04 \x01(\x0b\x32\t.NotReadyH\x00\x12$\n\x0c\x63reate_actor\x18\x05 \x01(\x0b\x32\x0c.CreateActorH\x00\x42\t\n\x07payload\"<\n\x12ResponseSimulation\x12&\n\x08messages\x18\x01 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -72,14 +72,14 @@ _TRAFFICGENERATORPARAMETERS = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='distribution_period', full_name='TrafficGeneratorParameters.distribution_period', index=0,
+      name='distribution_rate', full_name='TrafficGeneratorParameters.distribution_rate', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='parameters_period', full_name='TrafficGeneratorParameters.parameters_period', index=1,
+      name='parameters_rate', full_name='TrafficGeneratorParameters.parameters_rate', index=1,
       number=2, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -99,6 +99,20 @@ _TRAFFICGENERATORPARAMETERS = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='distribution_size', full_name='TrafficGeneratorParameters.distribution_size', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='parameters_size', full_name='TrafficGeneratorParameters.parameters_size', index=5,
+      number=6, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -112,7 +126,7 @@ _TRAFFICGENERATORPARAMETERS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=63,
-  serialized_end=219,
+  serialized_end=267,
 )
 
 
@@ -142,8 +156,8 @@ _MESSAGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=221,
-  serialized_end=254,
+  serialized_start=269,
+  serialized_end=302,
 )
 
 
@@ -173,8 +187,8 @@ _NOTREADY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=256,
-  serialized_end=283,
+  serialized_start=304,
+  serialized_end=331,
 )
 
 
@@ -225,8 +239,8 @@ _SIMULATIONINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=285,
-  serialized_end=382,
+  serialized_start=333,
+  serialized_end=430,
 )
 
 
@@ -270,8 +284,8 @@ _COUNTER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=384,
-  serialized_end=444,
+  serialized_start=432,
+  serialized_end=492,
 )
 
 
@@ -301,8 +315,8 @@ _COUNTERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=446,
-  serialized_end=484,
+  serialized_start=494,
+  serialized_end=532,
 )
 
 
@@ -339,8 +353,8 @@ _CREATEACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=486,
-  serialized_end=529,
+  serialized_start=534,
+  serialized_end=577,
 )
 
 
@@ -415,8 +429,8 @@ _TOPYTHONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToPythonMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=532,
-  serialized_end=778,
+  serialized_start=580,
+  serialized_end=826,
 )
 
 
@@ -477,8 +491,8 @@ _TOSIMULATIONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToSimulationMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=781,
-  serialized_end=991,
+  serialized_start=829,
+  serialized_end=1039,
 )
 
 
@@ -508,8 +522,8 @@ _RESPONSESIMULATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=993,
-  serialized_end=1053,
+  serialized_start=1041,
+  serialized_end=1101,
 )
 
 _COUNTERS.fields_by_name['counters'].message_type = _COUNTER

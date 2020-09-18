@@ -21,34 +21,21 @@ class CommunicationRA:
             self._communicator.run()
 
     def handle_message(self, message: x_pb2.ToPythonMessage):
-        # if message.HasField("aimessageclient"):
-        #     aimsg = message.aimessageclient
-        #     toSimMessage = x_pb2.ToSimulationMessage()
-        #     new_msg = x_pb2.AIMessageClient()
-        #     new_msg.id = aimsg.id
-        #     new_msg.message = aimsg.message
-        #     toSimMessage.aimessageclient.CopyFrom(new_msg)
-        #     toSimMessage.transfer_id = message.transfer_id
-        #     toSimMessage.pid_receiver = message.pid_sender
-        #     self._communicator.add_message(toSimMessage)
         self._timemanager.updateTime(message.tick_offset)
 
-        if message.HasField("request"):
-            print(message)
+        if message.HasField("counters"):
             if self.ra_pid != '':
                 messageToAdd = self.ra_agent.getUpdate()
-                self._communicator.add_message(messageToAdd, self.ra_pid, "TrafficGeneratorParameters")
+                if messageToAdd:
+                    self._communicator.add_message(messageToAdd, self.ra_pid)
             self._communicator.send()
 
         if message.HasField("info"):
-            print(message)
             self._communicator.set_push_socket(message.info.ipaddress)
             self._timemanager.initializeTime(message.info.tick_length)
 
         if message.HasField("register_communicator"):
-            print(message)
             self.ra_pid = message.register_communicator.pid
-
 
 if __name__ == "__main__":
     messagehandler = CommunicationRA()
