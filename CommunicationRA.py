@@ -1,13 +1,13 @@
+import sys, getopt
 import x_pb2
 from Communicator import Communicator
 from RewardAdversarial import RewardAdversarial
 from TimeManagment import TimeManagement
-import datetime
 
 
 class CommunicationRA:
-    def __init__(self):
-        self._communicator = Communicator(5558, 5559)
+    def __init__(self, ipaddress_pull):
+        self._communicator = Communicator(ipaddress_pull, 5558, 5559)
         self._communicator.add_notifier(lambda m: self.handle_message(m))
 
         self._timemanager = TimeManagement()
@@ -24,6 +24,7 @@ class CommunicationRA:
         self._timemanager.updateTime(message.tick_offset)
 
         if message.HasField("counters"):
+            #print(message)
             if self.ra_pid != '':
                 messageToAdd = self.ra_agent.getUpdate()
                 if messageToAdd:
@@ -37,6 +38,21 @@ class CommunicationRA:
         if message.HasField("register_communicator"):
             self.ra_pid = message.register_communicator.pid
 
+
 if __name__ == "__main__":
-    messagehandler = CommunicationRA()
+    ipaddress = "127.0.0.1"
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hi:", ["ipaddress="])
+    except getopt.GetoptError:
+        print('CommunicationRO.py -i <ipaddress>')
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt == '-h':
+            print('CommunicationRO.py -i <ipaddress>')
+            sys.exit()
+        elif opt in ("-i", "--ipaddress"):
+            ipaddress = arg
+
+    messagehandler = CommunicationRA(ipaddress)
     messagehandler.run()
