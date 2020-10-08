@@ -13,7 +13,7 @@ class CommunicationRA:
         self._timemanager = TimeManagement()
 
         self.ra_pid = ''
-        self.ra_agent = RewardAdversarial()
+        self.ra_agent = RewardAdversarial(self._timemanager)
         self.ra_agent.run()
 
     def run(self):
