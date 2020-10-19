@@ -22,13 +22,12 @@ class CommunicationRA:
 
     def handle_message(self, message: x_pb2.ToPythonMessage):
         self._timemanager.updateTime(message.tick_offset)
-
         if message.HasField("counters"):
             #print(message)
             if self.ra_pid != '':
-                messageToAdd = self.ra_agent.getUpdate()
-                if messageToAdd:
-                    self._communicator.add_message(messageToAdd, self.ra_pid)
+                messages = self.ra_agent.getUpdate()
+                for message_sim in messages:
+                    self._communicator.add_message(message_sim, self.ra_pid)
             self._communicator.send()
 
         if message.HasField("info"):

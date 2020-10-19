@@ -6,7 +6,9 @@
 
     `pip3 install -r requirements.txt
 `
-3) 
+3) When the proto file is updated, execute the following command to generate the python code:
+
+    `protoc -I=. --python_out=. x.proto`
 
 python3 CommunicationRA.py
 

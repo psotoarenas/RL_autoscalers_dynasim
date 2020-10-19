@@ -44,20 +44,13 @@ class Communicator:
         print(ipaddress)
 
     def add_message(self, toSimMessage, target):
-        #toSimMessage = x_pb2.ToSimulationMessage()
-        #if payload == "TrafficGeneratorParameters":
-        #    toSimMessage.traffic_generator_params.CopyFrom(message)
-        #elif payload == "NotReady":
-        #    toSimMessage.not_ready.CopyFrom(message)
-
-        toSimMessage.transfer_id = 1
         toSimMessage.pid_receiver = target
-
         self.response_msgs.messages.add().CopyFrom(toSimMessage)
 
     def send(self):
         self._speak_socket.send(self.response_msgs.SerializeToString())
         self.response_msgs = x_pb2.ResponseSimulation()
+        self.response_msgs.transfer_id = 1
 
     def _receive(self):
         result = self._listen_socket.recv()

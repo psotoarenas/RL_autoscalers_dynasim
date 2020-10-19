@@ -31,7 +31,7 @@ class RewardAdversarial:
         message.distribution_size = self.distribution_size
         message.parameters_size.extend(self.size_params)
         toSimMessage.traffic_generator_params.CopyFrom(message)
-        return toSimMessage
+        return [toSimMessage]
 
     def updateParams(self):
         while True:
