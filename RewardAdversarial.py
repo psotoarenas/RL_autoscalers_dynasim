@@ -2,7 +2,7 @@ import threading
 import time
 import x_pb2
 import random
-
+import numpy as np
 
 class RewardAdversarial:
     def __init__(self, timemanager):
@@ -16,10 +16,13 @@ class RewardAdversarial:
         self.timemanager = timemanager
 
     def getUpdate(self):
-        print(self.timemanager.getCurrentSimulationTime())
-        if len(self.job_list):
-            new_params = self.job_list.pop(0)
-            self.size_params[0] = new_params
+#        print(self.timemanager.getCurrentSimulationTime())
+#        if len(self.job_list):
+#            new_params = self.job_list.pop(0)
+#            self.size_params[0] = new_params
+        timeOfDay = self.timemanager.getCurrentSimulationTime()
+        new_params = max(int(300.0*(2.0 + 0.7*np.sin(2.0*np.pi*timeOfDay/86400.0) - 0.5*np.sin(6.0*np.pi*timeOfDay/86400.0)) + 20.0*random.gauss(0.0, 1.0)), 0)
+        print(timeOfDay, new_params)
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()
         message.distribution_rate = self.distribution_rate
