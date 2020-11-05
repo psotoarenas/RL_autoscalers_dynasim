@@ -16,8 +16,8 @@ class RewardOptimizer:
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
 
     def getUpdate(self):
-        return self.load_algorithm()
-        #return self.weight_test()
+        #return self.load_algorithm()
+        return self.weight_test()
 
     def load_algorithm(self):
         self.ms_removed = []
@@ -63,7 +63,7 @@ class RewardOptimizer:
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
                 parameters = [100, random_ms.get(name)]
-                new_actor = self.create_new_actor(name, actor='microservice', parameters=parameters)
+                new_actor = self.create_new_actor(name, actor='simple_microservice', parameters=parameters)
                 messages_to_send.append(new_actor)
                 print("actor created")
 

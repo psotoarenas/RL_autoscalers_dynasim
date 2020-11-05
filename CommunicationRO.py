@@ -35,8 +35,9 @@ class CommunicationRA:
 
             if self.ro_pid != '':
                 messages = self.ro_agent.getUpdate()
-                for message_sim in messages:
-                    self._communicator.add_message(message_sim, self.ro_pid)
+                if messages is not None:
+                    for message_sim in messages:
+                        self._communicator.add_message(message_sim, self.ro_pid)
                 self._communicator.send()
 
 
