@@ -16,8 +16,8 @@ class RewardOptimizer:
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
 
     def getUpdate(self):
-        #return self.load_algorithm()
-        return self.weight_test()
+        return self.load_algorithm()
+        #return self.weight_test()
 
     def load_algorithm(self):
         self.ms_removed = []
