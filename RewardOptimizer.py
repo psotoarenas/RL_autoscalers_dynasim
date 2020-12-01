@@ -17,6 +17,7 @@ class RewardOptimizer:
         self.ms_removed = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
+        base_logger.timemanager = self.timemanager
 
     def getUpdate(self):
         return self.load_algorithm()
@@ -27,12 +28,12 @@ class RewardOptimizer:
         if self.number_of_ms > 0:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
-            print("#MS: {}".format(self.number_of_ms), end=', ')
-            print("Cpu Usage: {:.2f}".format(cpu_usage), end=', ')
-            print("Overflow: {:.2f}".format(overflow))
-            base_logger.m_log("#MS: {}".format(self.number_of_ms), self.timemanager)
-            base_logger.m_log("Cpu Usage: {:.2f}".format(cpu_usage), self.timemanager)
-            base_logger.m_log("Overflow: {:.2f}".format(overflow), self.timemanager)
+            #print("#MS: {}".format(self.number_of_ms), end=', ')
+            #print("Cpu Usage: {:.2f}".format(cpu_usage), end=', ')
+            #print("Overflow: {:.2f}".format(overflow))
+            base_logger.info("MS: {}".format(self.number_of_ms))
+            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
+            base_logger.info("Overflow: {:.2f}".format(overflow))
             messages_to_send = []
 
             if cpu_usage < 0.1 and self.number_of_ms > 1:

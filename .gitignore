@@ -96,7 +96,8 @@ ipython_config.py
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
-
+.DS_Store
+*.traces
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
