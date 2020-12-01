@@ -10,7 +10,8 @@ class RewardAdversarial:
         self.distribution_execution_time = 'uniform'
         self.distribution_size = 'exact'
         self.size_params = [300]
-        self.job_list = [433, 348, 950, 481, 25, 896, 156, 191, 674, 261, 897, 419, 950]
+        #self.job_list = [433, 348, 950, 481, 25, 896, 156, 191, 674, 261, 897, 419, 950]
+        self.job_list = [500]
         self.rate_params = [100]
         self.execution_time_params = [1]
         self.timemanager = timemanager

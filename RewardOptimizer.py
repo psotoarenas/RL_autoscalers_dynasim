@@ -2,6 +2,8 @@ import threading
 import time
 import x_pb2
 import random
+from base_logger import logger
+import base_logger
 import TimeManagment
 
 
@@ -14,6 +16,7 @@ class RewardOptimizer:
         self.weight_per_ms = {}
         self.ms_removed = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
+        base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
 
     def getUpdate(self):
         return self.load_algorithm()
@@ -27,10 +30,12 @@ class RewardOptimizer:
             print("#MS: {}".format(self.number_of_ms), end=', ')
             print("Cpu Usage: {:.2f}".format(cpu_usage), end=', ')
             print("Overflow: {:.2f}".format(overflow))
-
+            base_logger.m_log("#MS: {}".format(self.number_of_ms), self.timemanager)
+            base_logger.m_log("Cpu Usage: {:.2f}".format(cpu_usage), self.timemanager)
+            base_logger.m_log("Overflow: {:.2f}".format(overflow), self.timemanager)
             messages_to_send = []
 
-            if cpu_usage < 0.5 and self.number_of_ms > 1:
+            if cpu_usage < 0.1 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
                 self.ms_removed.append(ms_name)
                 delete_actor = self.remove_actor(ms_name, 'microservice')
@@ -40,7 +45,7 @@ class RewardOptimizer:
             elif cpu_usage > 0.8:
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
                 parameters = [300, round(random.random(), 2)]
-                new_actor = self.create_new_actor(actor_name, actor='microservice', parameters=parameters)
+                new_actor = self.create_new_actor(actor_name, actor='simple_microservice', parameters=parameters)
                 print(new_actor)
                 messages_to_send.append(new_actor)
 
