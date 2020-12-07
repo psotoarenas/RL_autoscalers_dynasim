@@ -45,7 +45,7 @@ class RewardOptimizer:
 
             elif cpu_usage > 0.8:
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                parameters = [300, round(random.random(), 2)]
+                parameters = [300, round(random.random(), 2), 2]
                 new_actor = self.create_new_actor(actor_name, actor='simple_microservice', parameters=parameters)
                 print(new_actor)
                 messages_to_send.append(new_actor)
@@ -68,7 +68,7 @@ class RewardOptimizer:
         print("Prev list: " + str(self.test_ms))
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
-                parameters = [100, random_ms.get(name)]
+                parameters = [100, random_ms.get(name), 2]
                 new_actor = self.create_new_actor(name, actor='simple_microservice', parameters=parameters)
                 messages_to_send.append(new_actor)
                 print("actor created")
