@@ -27,7 +27,7 @@ class RewardAdversarial:
         timeOfDay = self.timemanager.getCurrentSimulationTime()
         new_params = max(int(300.0*(2.0 + 0.7*np.sin(2.0*np.pi*timeOfDay/86400.0) - 0.5*np.sin(6.0*np.pi*timeOfDay/86400.0)) + 20.0*random.gauss(0.0, 1.0)), 0)
         self.size_params[0] = new_params
-        print(timeOfDay, new_params)
+        print(timeOfDay, 100)
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()
         message.distribution_rate = self.distribution_rate
