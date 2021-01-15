@@ -14,6 +14,7 @@ class RewardOptimizer:
         self.total_cpu_usage = 0.0
         self.total_overflow = 0.0
         self.weight_per_ms = {}
+        self.pid_per_ms = {}
         self.ms_removed = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
@@ -38,8 +39,9 @@ class RewardOptimizer:
 
             if cpu_usage < 0.1 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
+                ms_pid = self.pid_per_ms[ms_name]
                 self.ms_removed.append(ms_name)
-                delete_actor = self.remove_actor(ms_name, 'microservice')
+                delete_actor = self.remove_actor(ms_name, ms_pid, 'microservice')
                 print(delete_actor)
                 messages_to_send.append(delete_actor)
 
@@ -99,17 +101,19 @@ class RewardOptimizer:
         message = x_pb2.CreateActor()
         message.type = actor
         message.name = name
+        message.server_name = "Server_1"
         message.parameters.extend(parameters)
         create_actors.create_actors.add().CopyFrom(message)
         toSimMessage.create_actors.CopyFrom(create_actors)
         return toSimMessage
 
-    def remove_actor(self, name, actor='microservice'):
+    def remove_actor(self, name, pid, actor='microservice'):
         toSimMessage = x_pb2.ToSimulationMessage()
         remove_actors = x_pb2.RemoveActors()
         message = x_pb2.RemoveActor()
         message.type = actor
         message.name = name
+        message.pid = pid
         remove_actors.remove_actors.add().CopyFrom(message)
         toSimMessage.remove_actors.CopyFrom(remove_actors)
         return toSimMessage
@@ -119,6 +123,7 @@ class RewardOptimizer:
             return
         if counter.actor_name not in self.weight_per_ms:
             self.weight_per_ms[counter.actor_name] = 0.5
+            self.pid_per_ms[counter.actor_name] = counter.actor_pid
         if counter.metric == 'cpu_usage':
             self.number_of_ms += 1
             self.total_cpu_usage += counter.value
