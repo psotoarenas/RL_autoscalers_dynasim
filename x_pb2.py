@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='x.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\xcc\x01\n\x1aTrafficGeneratorParameters\x12\x19\n\x11\x64istribution_rate\x18\x01 \x01(\t\x12\x17\n\x0fparameters_rate\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\x12\x19\n\x11\x64istribution_size\x18\x05 \x01(\t\x12\x17\n\x0fparameters_size\x18\x06 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"T\n\x0c\x43ounterFloat\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\x02\"U\n\rCounterString\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\t\"Z\n\x08\x43ounters\x12%\n\x0e\x63ounters_float\x18\x01 \x03(\x0b\x32\r.CounterFloat\x12\'\n\x0f\x63ounters_string\x18\x02 \x03(\x0b\x32\x0e.CounterString\"R\n\x0b\x43reateActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0bserver_name\x18\x03 \x01(\t\x12\x12\n\nparameters\x18\x04 \x03(\x02\"3\n\x0c\x43reateActors\x12#\n\rcreate_actors\x18\x01 \x03(\x0b\x32\x0c.CreateActor\")\n\x0bRemoveActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"3\n\x0cRemoveActors\x12#\n\rremove_actors\x18\x01 \x03(\x0b\x32\x0c.RemoveActor\"Y\n\x14UpdateParameterActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x16\n\x0eparameter_name\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\x02\"\xf6\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1d\n\x08\x63ounters\x18\x07 \x01(\x0b\x32\t.CountersH\x00\x42\t\n\x07payload\"\x80\x02\n\x13ToSimulationMessage\x12\x14\n\x0cpid_receiver\x18\x01 \x01(\t\x12?\n\x18traffic_generator_params\x18\x02 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x12&\n\rcreate_actors\x18\x04 \x01(\x0b\x32\r.CreateActorsH\x00\x12&\n\rremove_actors\x18\x05 \x01(\x0b\x32\r.RemoveActorsH\x00\x12\x37\n\x16update_parameter_actor\x18\x06 \x01(\x0b\x32\x15.UpdateParameterActorH\x00\x42\t\n\x07payload\"Q\n\x12ResponseSimulation\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12&\n\x08messages\x18\x02 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
+  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\xcc\x01\n\x1aTrafficGeneratorParameters\x12\x19\n\x11\x64istribution_rate\x18\x01 \x01(\t\x12\x17\n\x0fparameters_rate\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\x12\x19\n\x11\x64istribution_size\x18\x05 \x01(\t\x12\x17\n\x0fparameters_size\x18\x06 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"T\n\x0c\x43ounterFloat\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\x02\"U\n\rCounterString\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\t\"Z\n\x08\x43ounters\x12%\n\x0e\x63ounters_float\x18\x01 \x03(\x0b\x32\r.CounterFloat\x12\'\n\x0f\x63ounters_string\x18\x02 \x03(\x0b\x32\x0e.CounterString\"C\n\tParameter\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x15\n\x0b\x66loat_value\x18\x02 \x01(\x02H\x00\x42\x07\n\x05value\"\x9d\x01\n\x12\x43reateMicroservice\x12\x12\n\nactor_type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0bserver_name\x18\x03 \x01(\t\x12\x17\n\x0fincoming_actors\x18\x04 \x03(\t\x12\x17\n\x0foutgoing_actors\x18\x05 \x03(\t\x12\x1e\n\nparameters\x18\x06 \x03(\x0b\x32\n.Parameter\"C\n\x0b\x43reateActor\x12+\n\x0cmicroservice\x18\x01 \x01(\x0b\x32\x13.CreateMicroserviceH\x00\x42\x07\n\x05\x61\x63tor\"3\n\x0c\x43reateActors\x12#\n\rcreate_actors\x18\x01 \x03(\x0b\x32\x0c.CreateActor\"6\n\x0bRemoveActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03pid\x18\x03 \x01(\t\"3\n\x0cRemoveActors\x12#\n\rremove_actors\x18\x01 \x03(\x0b\x32\x0c.RemoveActor\"Y\n\x14UpdateParameterActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x16\n\x0eparameter_name\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\x02\"\xf6\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1d\n\x08\x63ounters\x18\x07 \x01(\x0b\x32\t.CountersH\x00\x42\t\n\x07payload\"\xfc\x01\n\x13ToSimulationMessage\x12\x14\n\x0cpid_receiver\x18\x01 \x01(\t\x12?\n\x18traffic_generator_params\x18\x02 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x12$\n\x0c\x63reate_actor\x18\x04 \x01(\x0b\x32\x0c.CreateActorH\x00\x12$\n\x0cremove_actor\x18\x05 \x01(\x0b\x32\x0c.RemoveActorH\x00\x12\x37\n\x16update_parameter_actor\x18\x06 \x01(\x0b\x32\x15.UpdateParameterActorH\x00\x42\t\n\x07payload\"Q\n\x12ResponseSimulation\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12&\n\x08messages\x18\x02 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -355,37 +355,92 @@ _COUNTERS = _descriptor.Descriptor(
 )
 
 
-_CREATEACTOR = _descriptor.Descriptor(
-  name='CreateActor',
-  full_name='CreateActor',
+_PARAMETER = _descriptor.Descriptor(
+  name='Parameter',
+  full_name='Parameter',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='type', full_name='CreateActor.type', index=0,
+      name='string_value', full_name='Parameter.string_value', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='name', full_name='CreateActor.name', index=1,
+      name='float_value', full_name='Parameter.float_value', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='value', full_name='Parameter.value',
+      index=0, containing_type=None, fields=[]),
+  ],
+  serialized_start=668,
+  serialized_end=735,
+)
+
+
+_CREATEMICROSERVICE = _descriptor.Descriptor(
+  name='CreateMicroservice',
+  full_name='CreateMicroservice',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='actor_type', full_name='CreateMicroservice.actor_type', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='name', full_name='CreateMicroservice.name', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='server_name', full_name='CreateActor.server_name', index=2,
+      name='server_name', full_name='CreateMicroservice.server_name', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='parameters', full_name='CreateActor.parameters', index=3,
-      number=4, type=2, cpp_type=6, label=3,
+      name='incoming_actors', full_name='CreateMicroservice.incoming_actors', index=3,
+      number=4, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='outgoing_actors', full_name='CreateMicroservice.outgoing_actors', index=4,
+      number=5, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='parameters', full_name='CreateMicroservice.parameters', index=5,
+      number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -402,8 +457,42 @@ _CREATEACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=668,
-  serialized_end=750,
+  serialized_start=738,
+  serialized_end=895,
+)
+
+
+_CREATEACTOR = _descriptor.Descriptor(
+  name='CreateActor',
+  full_name='CreateActor',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='microservice', full_name='CreateActor.microservice', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='actor', full_name='CreateActor.actor',
+      index=0, containing_type=None, fields=[]),
+  ],
+  serialized_start=897,
+  serialized_end=964,
 )
 
 
@@ -433,8 +522,8 @@ _CREATEACTORS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=752,
-  serialized_end=803,
+  serialized_start=966,
+  serialized_end=1017,
 )
 
 
@@ -459,6 +548,13 @@ _REMOVEACTOR = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='pid', full_name='RemoveActor.pid', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -471,8 +567,8 @@ _REMOVEACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=805,
-  serialized_end=846,
+  serialized_start=1019,
+  serialized_end=1073,
 )
 
 
@@ -502,8 +598,8 @@ _REMOVEACTORS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=848,
-  serialized_end=899,
+  serialized_start=1075,
+  serialized_end=1126,
 )
 
 
@@ -554,8 +650,8 @@ _UPDATEPARAMETERACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=901,
-  serialized_end=990,
+  serialized_start=1128,
+  serialized_end=1217,
 )
 
 
@@ -630,8 +726,8 @@ _TOPYTHONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToPythonMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=993,
-  serialized_end=1239,
+  serialized_start=1220,
+  serialized_end=1466,
 )
 
 
@@ -657,14 +753,14 @@ _TOSIMULATIONMESSAGE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='create_actors', full_name='ToSimulationMessage.create_actors', index=2,
+      name='create_actor', full_name='ToSimulationMessage.create_actor', index=2,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='remove_actors', full_name='ToSimulationMessage.remove_actors', index=3,
+      name='remove_actor', full_name='ToSimulationMessage.remove_actor', index=3,
       number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -692,8 +788,8 @@ _TOSIMULATIONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToSimulationMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1242,
-  serialized_end=1498,
+  serialized_start=1469,
+  serialized_end=1721,
 )
 
 
@@ -730,12 +826,23 @@ _RESPONSESIMULATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1500,
-  serialized_end=1581,
+  serialized_start=1723,
+  serialized_end=1804,
 )
 
 _COUNTERS.fields_by_name['counters_float'].message_type = _COUNTERFLOAT
 _COUNTERS.fields_by_name['counters_string'].message_type = _COUNTERSTRING
+_PARAMETER.oneofs_by_name['value'].fields.append(
+  _PARAMETER.fields_by_name['string_value'])
+_PARAMETER.fields_by_name['string_value'].containing_oneof = _PARAMETER.oneofs_by_name['value']
+_PARAMETER.oneofs_by_name['value'].fields.append(
+  _PARAMETER.fields_by_name['float_value'])
+_PARAMETER.fields_by_name['float_value'].containing_oneof = _PARAMETER.oneofs_by_name['value']
+_CREATEMICROSERVICE.fields_by_name['parameters'].message_type = _PARAMETER
+_CREATEACTOR.fields_by_name['microservice'].message_type = _CREATEMICROSERVICE
+_CREATEACTOR.oneofs_by_name['actor'].fields.append(
+  _CREATEACTOR.fields_by_name['microservice'])
+_CREATEACTOR.fields_by_name['microservice'].containing_oneof = _CREATEACTOR.oneofs_by_name['actor']
 _CREATEACTORS.fields_by_name['create_actors'].message_type = _CREATEACTOR
 _REMOVEACTORS.fields_by_name['remove_actors'].message_type = _REMOVEACTOR
 _TOPYTHONMESSAGE.fields_by_name['request'].message_type = _MESSAGEREQUEST
@@ -755,18 +862,18 @@ _TOPYTHONMESSAGE.oneofs_by_name['payload'].fields.append(
   _TOPYTHONMESSAGE.fields_by_name['counters'])
 _TOPYTHONMESSAGE.fields_by_name['counters'].containing_oneof = _TOPYTHONMESSAGE.oneofs_by_name['payload']
 _TOSIMULATIONMESSAGE.fields_by_name['traffic_generator_params'].message_type = _TRAFFICGENERATORPARAMETERS
-_TOSIMULATIONMESSAGE.fields_by_name['create_actors'].message_type = _CREATEACTORS
-_TOSIMULATIONMESSAGE.fields_by_name['remove_actors'].message_type = _REMOVEACTORS
+_TOSIMULATIONMESSAGE.fields_by_name['create_actor'].message_type = _CREATEACTOR
+_TOSIMULATIONMESSAGE.fields_by_name['remove_actor'].message_type = _REMOVEACTOR
 _TOSIMULATIONMESSAGE.fields_by_name['update_parameter_actor'].message_type = _UPDATEPARAMETERACTOR
 _TOSIMULATIONMESSAGE.oneofs_by_name['payload'].fields.append(
   _TOSIMULATIONMESSAGE.fields_by_name['traffic_generator_params'])
 _TOSIMULATIONMESSAGE.fields_by_name['traffic_generator_params'].containing_oneof = _TOSIMULATIONMESSAGE.oneofs_by_name['payload']
 _TOSIMULATIONMESSAGE.oneofs_by_name['payload'].fields.append(
-  _TOSIMULATIONMESSAGE.fields_by_name['create_actors'])
-_TOSIMULATIONMESSAGE.fields_by_name['create_actors'].containing_oneof = _TOSIMULATIONMESSAGE.oneofs_by_name['payload']
+  _TOSIMULATIONMESSAGE.fields_by_name['create_actor'])
+_TOSIMULATIONMESSAGE.fields_by_name['create_actor'].containing_oneof = _TOSIMULATIONMESSAGE.oneofs_by_name['payload']
 _TOSIMULATIONMESSAGE.oneofs_by_name['payload'].fields.append(
-  _TOSIMULATIONMESSAGE.fields_by_name['remove_actors'])
-_TOSIMULATIONMESSAGE.fields_by_name['remove_actors'].containing_oneof = _TOSIMULATIONMESSAGE.oneofs_by_name['payload']
+  _TOSIMULATIONMESSAGE.fields_by_name['remove_actor'])
+_TOSIMULATIONMESSAGE.fields_by_name['remove_actor'].containing_oneof = _TOSIMULATIONMESSAGE.oneofs_by_name['payload']
 _TOSIMULATIONMESSAGE.oneofs_by_name['payload'].fields.append(
   _TOSIMULATIONMESSAGE.fields_by_name['update_parameter_actor'])
 _TOSIMULATIONMESSAGE.fields_by_name['update_parameter_actor'].containing_oneof = _TOSIMULATIONMESSAGE.oneofs_by_name['payload']
@@ -778,6 +885,8 @@ DESCRIPTOR.message_types_by_name['SimulationInfo'] = _SIMULATIONINFO
 DESCRIPTOR.message_types_by_name['CounterFloat'] = _COUNTERFLOAT
 DESCRIPTOR.message_types_by_name['CounterString'] = _COUNTERSTRING
 DESCRIPTOR.message_types_by_name['Counters'] = _COUNTERS
+DESCRIPTOR.message_types_by_name['Parameter'] = _PARAMETER
+DESCRIPTOR.message_types_by_name['CreateMicroservice'] = _CREATEMICROSERVICE
 DESCRIPTOR.message_types_by_name['CreateActor'] = _CREATEACTOR
 DESCRIPTOR.message_types_by_name['CreateActors'] = _CREATEACTORS
 DESCRIPTOR.message_types_by_name['RemoveActor'] = _REMOVEACTOR
@@ -835,6 +944,20 @@ Counters = _reflection.GeneratedProtocolMessageType('Counters', (_message.Messag
   # @@protoc_insertion_point(class_scope:Counters)
   ))
 _sym_db.RegisterMessage(Counters)
+
+Parameter = _reflection.GeneratedProtocolMessageType('Parameter', (_message.Message,), dict(
+  DESCRIPTOR = _PARAMETER,
+  __module__ = 'x_pb2'
+  # @@protoc_insertion_point(class_scope:Parameter)
+  ))
+_sym_db.RegisterMessage(Parameter)
+
+CreateMicroservice = _reflection.GeneratedProtocolMessageType('CreateMicroservice', (_message.Message,), dict(
+  DESCRIPTOR = _CREATEMICROSERVICE,
+  __module__ = 'x_pb2'
+  # @@protoc_insertion_point(class_scope:CreateMicroservice)
+  ))
+_sym_db.RegisterMessage(CreateMicroservice)
 
 CreateActor = _reflection.GeneratedProtocolMessageType('CreateActor', (_message.Message,), dict(
   DESCRIPTOR = _CREATEACTOR,

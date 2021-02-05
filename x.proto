@@ -44,25 +44,40 @@ message Counters {
     repeated CounterString counters_string = 2;
 }
 
-message CreateActor {
-    string type = 1;
-    string name = 2;
-    string server_name = 3;
-    repeated float parameters = 4;
+message Parameter {
+    oneof value {
+        string string_value = 1;
+        float float_value = 2;
+    }
 }
 
-message CreateActors {
-    repeated CreateActor create_actors = 1;
+message CreateMicroservice {
+    string actor_type = 1;
+    string name = 2;
+    string server_name = 3;
+    repeated string incoming_actors = 4;
+    repeated string outgoing_actors = 5;
+    repeated Parameter parameters = 6;
+}
+
+message CreateGenericActor {
+    string actor_type = 1;
+    string name = 2;
+    string server_name = 3;
+    repeated Parameter parameters = 4;
+}
+
+message CreateActor {
+    oneof actor {
+        CreateMicroservice microservice = 1;
+        CreateGenericActor generic_actor = 2;
+    }
 }
 
 message RemoveActor {
     string type = 1;
     string name = 2;
     string pid = 3;
-}
-
-message RemoveActors {
-    repeated RemoveActor remove_actors = 1;
 }
 
 message UpdateParameterActor {
@@ -88,8 +103,8 @@ message ToSimulationMessage {
     string pid_receiver = 1;
     oneof payload {
         TrafficGeneratorParameters traffic_generator_params = 2;
-        CreateActors create_actors = 4;
-        RemoveActors remove_actors = 5;
+        CreateActor create_actor = 4;
+        RemoveActor remove_actor = 5;
         UpdateParameterActor update_parameter_actor = 6;
     }
 }

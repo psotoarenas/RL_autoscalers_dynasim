@@ -14,8 +14,9 @@ class RewardOptimizer:
         self.total_cpu_usage = 0.0
         self.total_overflow = 0.0
         self.weight_per_ms = {}
-        self.pid_per_ms = {}
         self.ms_removed = []
+        self.ms_started = []
+        self.loadbalancer = "LoadBalancer"
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
         base_logger.timemanager = self.timemanager
@@ -29,9 +30,6 @@ class RewardOptimizer:
         if self.number_of_ms > 0:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
-            #print("#MS: {}".format(self.number_of_ms), end=', ')
-            #print("Cpu Usage: {:.2f}".format(cpu_usage), end=', ')
-            #print("Overflow: {:.2f}".format(overflow))
             base_logger.info("MS: {}".format(self.number_of_ms))
             base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
             base_logger.info("Overflow: {:.2f}".format(overflow))
@@ -39,17 +37,19 @@ class RewardOptimizer:
 
             if cpu_usage < 0.1 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
-                ms_pid = self.pid_per_ms[ms_name]
                 self.ms_removed.append(ms_name)
-                delete_actor = self.remove_actor(ms_name, ms_pid, 'microservice')
+                delete_actor = self.remove_actor(ms_name, 'microservice')
                 print(delete_actor)
                 messages_to_send.append(delete_actor)
 
-            elif cpu_usage > 0.8:
+            elif cpu_usage > 0.8 and len(self.ms_started) == 0:
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                parameters = [300, round(random.random(), 2), 2]
-                new_actor = self.create_new_actor(actor_name, actor='simple_microservice', parameters=parameters)
+                parameters = [300, 2]
+                #new_actor = self.create_new_actor(actor_name, actor='simple_microservice', parameters=parameters)
+                new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
                 print(new_actor)
+                self.ms_started.append(actor_name)
                 messages_to_send.append(new_actor)
 
             self.number_of_ms = 0
@@ -71,7 +71,7 @@ class RewardOptimizer:
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
                 parameters = [100, random_ms.get(name), 2]
-                new_actor = self.create_new_actor(name, actor='simple_microservice', parameters=parameters)
+                new_actor = self.create_new_microservice(name, actor_type='simple_microservice', parameters=parameters)
                 messages_to_send.append(new_actor)
                 print("actor created")
 
@@ -95,40 +95,54 @@ class RewardOptimizer:
         self.test_ms = random_ms
         return messages_to_send
 
-    def create_new_actor(self, name, actor='microservice', parameters=[]):
+    def create_new_microservice(self, name, actor_type, incoming_actors, outgoing_actors=[], parameters=[]):
+        ParameterMessages = self.create_parameter_message(parameters)
         toSimMessage = x_pb2.ToSimulationMessage()
-        create_actors = x_pb2.CreateActors()
-        message = x_pb2.CreateActor()
-        message.type = actor
+        create_actor = x_pb2.CreateActor()
+        message = x_pb2.CreateMicroservice()
+        message.actor_type = actor_type
         message.name = name
         message.server_name = "Server_1"
-        message.parameters.extend(parameters)
-        create_actors.create_actors.add().CopyFrom(message)
-        toSimMessage.create_actors.CopyFrom(create_actors)
+        message.incoming_actors.extend(incoming_actors)
+        message.outgoing_actors.extend(outgoing_actors)
+        message.parameters.extend(ParameterMessages)
+        create_actor.microservice.CopyFrom(message)
+        toSimMessage.create_actor.CopyFrom(create_actor)
         return toSimMessage
 
-    def remove_actor(self, name, pid, actor='microservice'):
+    def remove_actor(self, name, actor='microservice'):
         toSimMessage = x_pb2.ToSimulationMessage()
-        remove_actors = x_pb2.RemoveActors()
         message = x_pb2.RemoveActor()
         message.type = actor
         message.name = name
-        message.pid = pid
-        remove_actors.remove_actors.add().CopyFrom(message)
-        toSimMessage.remove_actors.CopyFrom(remove_actors)
+        toSimMessage.remove_actor.CopyFrom(message)
         return toSimMessage
 
     def add_counter(self, counter):
         if counter.actor_name in self.ms_removed:
             return
+        if counter.actor_name in self.ms_started:
+            self.ms_started.remove(counter.actor_name)
         if counter.actor_name not in self.weight_per_ms:
             self.weight_per_ms[counter.actor_name] = 0.5
-            self.pid_per_ms[counter.actor_name] = counter.actor_pid
         if counter.metric == 'cpu_usage':
             self.number_of_ms += 1
             self.total_cpu_usage += counter.value
         elif counter.metric == 'overflow':
             self.total_overflow += counter.value
+
+    def create_parameter_message(self, parameters):
+        list_parameter_messages = []
+        for parameter in parameters:
+            param_message = x_pb2.Parameter()
+            if isinstance(parameter, (float, int)):
+                param_message.float_value = parameter
+            else:
+                param_message.string_value = parameter
+
+            list_parameter_messages.append(param_message)
+
+        return list_parameter_messages
 
     def updateParams(self):
         while True:
