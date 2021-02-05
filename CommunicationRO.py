@@ -30,7 +30,7 @@ class CommunicationRA:
             self.ro_pid = message.register_communicator.pid
 
         if message.HasField("counters"):
-            print(message)
+            #print(message)
             for counter in message.counters.counters:
                 self.ro_agent.add_counter(counter)
 
