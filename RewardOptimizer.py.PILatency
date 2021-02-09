@@ -3,6 +3,7 @@ import time
 import x_pb2
 import random
 import TimeManagment
+import base_logger
 
 
 class RewardOptimizer:
@@ -19,6 +20,8 @@ class RewardOptimizer:
         self.oldlatency = 0.0
         self.alpha = 80.0 # default 80.0
         self.beta = 00.0 # default 40.0
+        base_logger.default_extra = {'app_name': 'RewardOptimizerPILatency', 'node': 'localhost'}
+        base_logger.timemanager = self.timemanager
 
     def getUpdate(self):
         return self.load_algorithm()
@@ -54,8 +57,8 @@ class RewardOptimizer:
             elif delta > 1.0 :
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
                 parameters = [300, round(random.random(), 2)]
-                new_actor = self.create_new_actor(actor_name, actor='microservice', parameters=parameters)
-                #print(new_actor)
+                new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
                 print("Action: +1")
                 messages_to_send.append(new_actor)
 
@@ -107,25 +110,27 @@ class RewardOptimizer:
         self.test_ms = random_ms
         return messages_to_send
 
-    def create_new_actor(self, name, actor='microservice', parameters=[]):
+    def create_new_microservice(self, name, actor_type, incoming_actors, outgoing_actors=[], parameters=[]):
+        ParameterMessages = self.create_parameter_message(parameters)
         toSimMessage = x_pb2.ToSimulationMessage()
-        create_actors = x_pb2.CreateActors()
-        message = x_pb2.CreateActor()
-        message.type = actor
+        create_actor = x_pb2.CreateActor()
+        message = x_pb2.CreateMicroservice()
+        message.actor_type = actor_type
         message.name = name
-        message.parameters.extend(parameters)
-        create_actors.create_actors.add().CopyFrom(message)
-        toSimMessage.create_actors.CopyFrom(create_actors)
+        message.server_name = "Server_1"
+        message.incoming_actors.extend(incoming_actors)
+        message.outgoing_actors.extend(outgoing_actors)
+        message.parameters.extend(ParameterMessages)
+        create_actor.microservice.CopyFrom(message)
+        toSimMessage.create_actor.CopyFrom(create_actor)
         return toSimMessage
 
     def remove_actor(self, name, actor='microservice'):
         toSimMessage = x_pb2.ToSimulationMessage()
-        remove_actors = x_pb2.RemoveActors()
         message = x_pb2.RemoveActor()
         message.type = actor
         message.name = name
-        remove_actors.remove_actors.add().CopyFrom(message)
-        toSimMessage.remove_actors.CopyFrom(remove_actors)
+        toSimMessage.remove_actor.CopyFrom(message)
         return toSimMessage
 
     def add_counter(self, counter):
@@ -140,6 +145,19 @@ class RewardOptimizer:
             self.total_overflow += counter.value
         elif counter.metric == 'peak_latency':
             self.max_peak_latency = max(counter.value, self.max_peak_latency)
+
+    def create_parameter_message(self, parameters):
+        list_parameter_messages = []
+        for parameter in parameters:
+            param_message = x_pb2.Parameter()
+            if isinstance(parameter, (float, int)):
+                param_message.float_value = parameter
+            else:
+                param_message.string_value = parameter
+
+            list_parameter_messages.append(param_message)
+
+        return list_parameter_messages
 
     def updateParams(self):
         while True:

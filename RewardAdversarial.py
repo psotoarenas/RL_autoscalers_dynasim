@@ -3,6 +3,7 @@ import time
 import x_pb2
 import random
 import numpy as np
+import base_logger
 
 class RewardAdversarial:
     def __init__(self, timemanager):
@@ -15,6 +16,8 @@ class RewardAdversarial:
         self.memory = 0
         self.execution_time_params = [1]
         self.timemanager = timemanager
+        base_logger.default_extra = {'app_name': 'RewardAdversarial', 'node': 'localhost'}
+        base_logger.timemanager = self.timemanager
 
     def getUpdate(self):
 #        print(self.timemanager.getCurrentSimulationTime())
