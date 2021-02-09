@@ -23,7 +23,7 @@ class CommunicationRA:
     def handle_message(self, message: x_pb2.ToPythonMessage):
         self._timemanager.updateTime(message.tick_offset)
         if message.HasField("counters"):
-            print(message)
+            #print(message)
             if self.ra_pid != '':
                 messages = self.ra_agent.getUpdate()
                 if messages is not None:
