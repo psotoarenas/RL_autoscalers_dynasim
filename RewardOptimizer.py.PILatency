@@ -56,7 +56,7 @@ class RewardOptimizer:
 
             elif delta > 1.0 :
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                parameters = [300, round(random.random(), 2)]
+                parameters = [300, 0]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
                                                          incoming_actors=["LoadBalancer"], outgoing_actors=[])
                 print("Action: +1")
