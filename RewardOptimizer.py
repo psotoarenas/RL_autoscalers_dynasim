@@ -5,6 +5,7 @@ import random
 from base_logger import logger
 import base_logger
 import TimeManagment
+import numpy as np
 
 
 class RewardOptimizer:
@@ -18,22 +19,36 @@ class RewardOptimizer:
         self.ms_started = []
         self.loadbalancer = "LoadBalancer"
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
+
+        #RA Parameters
+        self.distribution_rate = 'uniform'
+        self.distribution_execution_time = 'uniform'
+        self.distribution_size = 'exact'
+        self.size_params = [300]
+        self.job_list = [433, 348, 950, 481, 25, 896, 156, 191, 674, 261, 897, 419, 950]
+        self.rate_params = [100]
+        self.memory = 0
+        self.execution_time_params = [1]
+
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
         base_logger.timemanager = self.timemanager
 
     def getUpdate(self):
-        return self.load_algorithm()
-        #return self.weight_test()
+        messages_ro = self.load_algorithm()
+        messages_ra = self.getUpdateRA()
+        return messages_ra + messages_ro
 
     def load_algorithm(self):
         self.ms_removed = []
+        #must be defined here
+        messages_to_send = []
+
         if self.number_of_ms > 0:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
             base_logger.info("MS: {}".format(self.number_of_ms))
             base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
             base_logger.info("Overflow: {:.2f}".format(overflow))
-            messages_to_send = []
 
             if cpu_usage < 0.1 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
@@ -44,8 +59,7 @@ class RewardOptimizer:
 
             elif cpu_usage > 0.8 and len(self.ms_started) == 0:
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                parameters = [300, 2]
-                #new_actor = self.create_new_actor(actor_name, actor='simple_microservice', parameters=parameters)
+                parameters = [300, 0]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
                                                          incoming_actors=["LoadBalancer"], outgoing_actors=[])
                 print(new_actor)
@@ -56,7 +70,7 @@ class RewardOptimizer:
             self.total_cpu_usage = 0.0
             self.total_overflow = 0.0
 
-            return messages_to_send
+        return messages_to_send
 
     def weight_test(self):
         random_ms = {}
@@ -70,7 +84,7 @@ class RewardOptimizer:
         print("Prev list: " + str(self.test_ms))
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
-                parameters = [100, random_ms.get(name), 2]
+                parameters = [300, 0]
                 new_actor = self.create_new_microservice(name, actor_type='simple_microservice', parameters=parameters)
                 messages_to_send.append(new_actor)
                 print("actor created")
@@ -147,6 +161,32 @@ class RewardOptimizer:
     def updateParams(self):
         while True:
             time.sleep(0.5)
+
+    def getUpdateRA(self):
+        timeOfDay = self.timemanager.getCurrentSimulationTime()
+        new_params = max(int(300.0 * (0.9 + 0.1 * np.cos(np.pi * timeOfDay / 864000.0)) * (
+                    4.0 + 1.2 * np.sin(2.0 * np.pi * timeOfDay / 86400.0) - 0.6 * np.sin(
+                6.0 * np.pi * timeOfDay / 86400.0) + 0.02 * (np.sin(503.0 * np.pi * timeOfDay / 86400.0) - np.sin(
+                709.0 * np.pi * timeOfDay / 86400.0) * random.expovariate(1.0))) + self.memory + 5.0 * random.gauss(
+            0.0, 1.0)), 0)
+        if random.random() < 1e-4:
+            self.memory += 200.0 * random.expovariate(1.0)
+        else:
+            self.memory *= 0.99
+        self.size_params[0] = new_params
+        print(timeOfDay, new_params)
+        toSimMessage = x_pb2.ToSimulationMessage()
+        message = x_pb2.TrafficGeneratorParameters()
+        message.distribution_rate = self.distribution_rate
+        message.parameters_rate.extend(self.rate_params)
+
+        message.distribution_execution_time = self.distribution_execution_time
+        message.parameters_execution_time.extend(self.execution_time_params)
+
+        message.distribution_size = self.distribution_size
+        message.parameters_size.extend(self.size_params)
+        toSimMessage.traffic_generator_params.CopyFrom(message)
+        return [toSimMessage]
 
     def run(self):
         x = threading.Thread(target=self.updateParams)

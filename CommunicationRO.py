@@ -5,7 +5,7 @@ from TimeManagment import TimeManagement
 from RewardOptimizer import RewardOptimizer
 
 
-class CommunicationRA:
+class CommunicationRO:
     def __init__(self, ):
         self._communicator = Communicator(5556, 5557)
         self._communicator.add_notifier(lambda m: self.handle_message(m))
@@ -57,5 +57,5 @@ if __name__ == "__main__":
     #     elif opt in ("-i", "--ipaddress"):
     #         ipaddress = arg
 
-    messagehandler = CommunicationRA()
+    messagehandler = CommunicationRO()
     messagehandler.run()
