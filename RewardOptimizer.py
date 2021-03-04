@@ -18,7 +18,7 @@ class RewardOptimizer:
         self.ms_removed = []
         self.ms_started = []
         self.loadbalancer = "LoadBalancer"
-        self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
+        self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.1, "MS_4": 0.1, "MS_5": 0.1}
 
         #RA Parameters
         self.distribution_rate = 'uniform'
@@ -77,7 +77,7 @@ class RewardOptimizer:
         messages_to_send = []
         i = 1
         for ms in range(5):
-            weight = round(max(0.0, float(random.randint(-5, 10)) / 10), 3)
+            weight = round(max(0.1, float(random.randint(-10, 100))/100), 3)
             name = 'MS_{}'.format(i)
             i += 1
             random_ms[name] = weight
@@ -85,8 +85,21 @@ class RewardOptimizer:
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
                 parameters = [300, 0]
-                new_actor = self.create_new_microservice(name, actor_type='simple_microservice', parameters=parameters)
+                new_actor = self.create_new_microservice(name, actor_type='class_SimpleMicroservice', parameters=parameters,
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
                 messages_to_send.append(new_actor)
+
+                ParameterMessages = self.create_parameter_message([name, weight])
+                toSimMessage = x_pb2.ToSimulationMessage()
+                update_weight = x_pb2.UpdateParameterActor()
+                update_weight.type = "microservice"
+                update_weight.name = "LoadBalancer"
+                update_weight.parameter_name = "weight"
+                update_weight.parameters.extend(ParameterMessages)
+                toSimMessage.update_parameter_actor.CopyFrom(update_weight)
+
+                messages_to_send.append(toSimMessage)
+
                 print("actor created")
 
             elif weight != 0 and random_ms.get(name) == 0:
@@ -94,13 +107,14 @@ class RewardOptimizer:
                 messages_to_send.append(delete_actor)
                 print("actor deleted")
 
-            elif weight != 0 and random_ms.get(name) == 0:
+            elif weight != 0 and random_ms.get(name) != 0:
+                ParameterMessages = self.create_parameter_message([name, weight])
                 toSimMessage = x_pb2.ToSimulationMessage()
                 update_weight = x_pb2.UpdateParameterActor()
                 update_weight.type = "microservice"
-                update_weight.name = name
+                update_weight.name = "LoadBalancer"
                 update_weight.parameter_name = "weight"
-                update_weight.value = weight
+                update_weight.parameters.extend(ParameterMessages)
                 toSimMessage.update_parameter_actor.CopyFrom(update_weight)
                 messages_to_send.append(toSimMessage)
 
