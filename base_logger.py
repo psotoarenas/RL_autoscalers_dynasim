@@ -2,16 +2,20 @@ import logging
 default_extra = {}
 timemanager = None
 
+# Create a custom logger
 logger = logging.getLogger('basic-logger')
 logger.setLevel(logging.DEBUG)
 
-file_handler = logging.FileHandler('python.traces')
+# Create a file handler
+file_handler = logging.FileHandler('python.traces', mode='w')
 formatter = logging.Formatter('<0.0.0>|%(app_name)s|Python|%(sim_time)s|%(asctime)s|%(node)s|uncategorized|4|%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
 file_handler.setFormatter(formatter)
 
+# Create a console handler
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
 
+# Add handlers to the logger
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
