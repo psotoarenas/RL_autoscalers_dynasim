@@ -52,11 +52,9 @@ class DynaSimEnv(gym.Env):
 
         # start simulation
         self.total_timesteps = time_steps
-        self.dynasim.start_simulation(self.total_timesteps)
+        # self.dynasim.start_simulation(self.total_timesteps)
 
     def step(self, action):
-        # need to wait until next report
-        self.dynasim.receive_counters = False
 
         base_logger.info(f"Step: {self.current_step}")
         # print(f"Step: {self.current_step}")
@@ -70,16 +68,15 @@ class DynaSimEnv(gym.Env):
 
         self.current_step += 1
 
-        # when the next report is ready EnvironmentCommunicator.py will change the receive_counters flag to True
+        # when the next report is ready EnvironmentCommunicator.py will set report_ready to True
         # block the code execution until the report is received
-        while not self.dynasim.receive_counters:
-            pass
+        self.dynasim.report_ready.wait()
 
         # observe the effect of the action on the simulation status
         obs = self._next_observation()
 
         # assign a reward
-        if obs > 1 or obs < 0.5:
+        if obs >= 1.0 or obs < 0.5:
             reward = -1
         else:
             reward = 0
@@ -104,7 +101,6 @@ class DynaSimEnv(gym.Env):
         messages = self.dynasim.getUpdate()
         self.dynasim.send_messages(messages)
 
-
     def reset(self):
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:
@@ -117,7 +113,6 @@ class DynaSimEnv(gym.Env):
     def render(self, mode='human', close=False):
         print(f'Step: {self.current_step}')
         print(f'Num_of_ms: {self.dynasim.number_of_ms}')
-
 
 if __name__ == "__main__":
     # two timesteps are lost the first timestep to make the first observation and the last timestep to leave the simulation hanging

@@ -5,6 +5,7 @@ import x_pb2
 from TimeManagment import TimeManagement
 from Communicator import Communicator
 import subprocess
+import threading
 
 
 class DynaSim:
@@ -14,7 +15,7 @@ class DynaSim:
         self._communicator.add_notifier(lambda m: self.handle_message(m))
         self.timemanager = TimeManagement()
         self.ro_pid = ''
-        self.receive_counters = False
+        self.report_ready = threading.Event()
         self.first_observation = False
 
         # From MS handling
@@ -61,7 +62,7 @@ class DynaSim:
             # get report per microservice
             for counter in message.counters.counters_float:
                 self.add_counter(counter)
-            self.receive_counters = True
+            self.report_ready.set()
             self.first_observation = True  # not changed anywhere else in the code
 
             # simulator will wait until the agent sends a message!
@@ -72,6 +73,7 @@ class DynaSim:
             if messages is not None:
                 for message_sim in messages:
                     self._communicator.add_message(message_sim, self.ro_pid)
+            self.report_ready.clear()
             self._communicator.send()
         self.messages_to_send = []
 
