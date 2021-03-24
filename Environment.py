@@ -2,6 +2,7 @@ import gym
 from gym import spaces
 from EnvironmentCommunicator import DynaSim
 import base_logger
+import sys
 
 import numpy as np
 import threading
@@ -25,7 +26,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, time_steps):
+    def __init__(self, timesteps, ai_ip, sim_dir):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -35,10 +36,20 @@ class DynaSimEnv(gym.Env):
         print("Starting communication")
         self.dynasim = DynaSim()
         self.x = threading.Thread(target=self.dynasim.run)
+        self.x.daemon = True  # allows to kill the communication with the simulator
         self.x.start()
 
         # initialize timesteps
         self.current_step = 0
+
+        # total timesteps
+        self.timesteps = timesteps
+
+        # parameters to start simulation
+        self.ip = ai_ip
+        self.sim_dir = sim_dir
+        # simulation length should be longer than the number of timesteps to gracefully finish the process
+        self.sim_length = self.timesteps * 2
 
         # Setting discrete actions:
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
@@ -49,10 +60,6 @@ class DynaSimEnv(gym.Env):
 
         # logger
         base_logger.default_extra = {'app_name': 'Environment', 'node': 'localhost'}
-
-        # start simulation
-        self.total_timesteps = time_steps
-        # self.dynasim.start_simulation(self.total_timesteps)
 
     def step(self, action):
 
@@ -102,6 +109,12 @@ class DynaSimEnv(gym.Env):
         self.dynasim.send_messages(messages)
 
     def reset(self):
+        # stop any previous simulation
+        self.dynasim.stop_simulation()
+
+        # start the simulation
+        self.dynasim.start_simulation(total_timesteps=self.sim_length, ip=self.ip, cwd=self.sim_dir)
+
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:
             pass
@@ -115,18 +128,23 @@ class DynaSimEnv(gym.Env):
         print(f'Num_of_ms: {self.dynasim.number_of_ms}')
 
 if __name__ == "__main__":
-    # two timesteps are lost the first timestep to make the first observation and the last timestep to leave the simulation hanging
-    timesteps_train = 100
-    timesteps_simulation = timesteps_train + 2
+    # at least two ticks more are needed in the total simulation length: the first tick to make the first observation
+    # and the last tick to be able to finish the process properly
+    total_timesteps = 200
+    # parameters to start simulation
+    ip = input("Specify the IP where the python scripts are running")
+    sim_dir = input("Specify the directory where the simulator runs")
     # without vectorized environments
-    env = DynaSimEnv(timesteps_simulation)
+    env = DynaSimEnv(timesteps=total_timesteps, ai_ip=ip, sim_dir=sim_dir)
     # Random Actions from action space -> the same as agent.learn but without saving to memory (learning)
     print(f"Action Space: {env.action_space}")
     print(f"Observation Space: {env.observation_space}")
     observation = env.reset()
-    for _ in range(timesteps_train):
-        env.render()
-        print(f"Observation: {observation}")
+    for i in range(total_timesteps):
+        # take random action
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
+    # the process needs to be killed so it does not remain active after ending the script
+    env.dynasim.stop_simulation()
     print("End")
+    sys.exit()

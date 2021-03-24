@@ -6,17 +6,21 @@ from TimeManagment import TimeManagement
 from Communicator import Communicator
 import subprocess
 import threading
+import os
+import signal
+import time
 
 
 class DynaSim:
-    def __init__(self,):
+    def __init__(self, ):
         # communicator side
         self._communicator = Communicator(5556, 5557)
         self._communicator.add_notifier(lambda m: self.handle_message(m))
         self.timemanager = TimeManagement()
-        self.ro_pid = ''
+        self.ro_pid = ""
         self.report_ready = threading.Event()
         self.first_observation = False
+        self.process = ""
 
         # From MS handling
         self.number_of_ms = 0
@@ -173,9 +177,9 @@ class DynaSim:
         # compute the traffic that is sent to the simulator
         timeOfDay = self.timemanager.getCurrentSimulationTime()
         new_params = max(int(300.0 * (0.9 + 0.1 * np.cos(np.pi * timeOfDay / 864000.0)) * (
-                    4.0 + 1.2 * np.sin(2.0 * np.pi * timeOfDay / 86400.0) - 0.6 * np.sin(
-                6.0 * np.pi * timeOfDay / 86400.0) + 0.02 * (np.sin(503.0 * np.pi * timeOfDay / 86400.0) - np.sin(
-                709.0 * np.pi * timeOfDay / 86400.0) * random.expovariate(1.0))) + self.memory + 5.0 * random.gauss(
+                4.0 + 1.2 * np.sin(2.0 * np.pi * timeOfDay / 86400.0) - 0.6 * np.sin(
+            6.0 * np.pi * timeOfDay / 86400.0) + 0.02 * (np.sin(503.0 * np.pi * timeOfDay / 86400.0) - np.sin(
+            709.0 * np.pi * timeOfDay / 86400.0) * random.expovariate(1.0))) + self.memory + 5.0 * random.gauss(
             0.0, 1.0)), 0)
         if random.random() < 1e-4:
             self.memory += 200.0 * random.expovariate(1.0)
@@ -197,51 +201,38 @@ class DynaSim:
         toSimMessage.traffic_generator_params.CopyFrom(message)
         return [toSimMessage]
 
-    def start_simulation(self, total_timesteps, tick_freq=5, ip="146.175.219.154", cwd="/home/psoto/dynamicsim/mock-simulators/dynaSim/test/"):
-        '''
+    def start_simulation(self, total_timesteps, tick_freq=5, ip="127.0.0.1",
+                         cwd="../dynamicsim/mock-simulators/dynaSim/test/"):
+        """
+        This function starts automatically the simulation in a non-blocking subprocess. Here we assume that the agent
+        and the simulator are running in the same machine. A timestep is an interaction of the agent with the simulator.
+        We consider an interaction as the agent sending an action and receiving the state of the simulator after
+        applying the action. Therefore, the simulation length is related to the tick frequency and the number of
+        timesteps.
 
-        This function starts automatically the simulation in a non-blocking subprocess
         :param total_timesteps: total time steps that the agent will train or predict. Integer
-        :param tick_freq: number of ticks that the simulator will produce an output
+        :param tick_freq: number of ticks per second
         :param ip: ip address from the server. It is assumed that both agent and simulation run in the same machine
         :param cwd: directory from which the make command will run
         :return:
-
-        '''
-        # here we assume that the agent and the simulator are running in the same machine
+        """
         # if using shell=True in the Popen subprocess, the command should be as single string and not list
+        # The os.setsid fn attach a session id to all child subprocesses created by the simulation (erlang, wooper)
         sim_length = total_timesteps * tick_freq
-        cmd = '(make -s dynasim_run CMD_LINE_OPT="--batch --ip {} --length {} --ticks {} --trace-type text")'.format(ip,
-                                                                                                                     sim_length,
-                                                                                                                     tick_freq)
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   universal_newlines=True,
-                                   shell=True,
-                                   cwd=cwd)
-
+        cmd = 'make -s dynasim_run CMD_LINE_OPT="--batch --ip {} --length {} --ticks {}"'.format(ip, sim_length,
+                                                                                                 tick_freq)
+        self.process = subprocess.Popen(cmd,
+                                        stdout=subprocess.DEVNULL,
+                                        shell=True,
+                                        cwd=cwd,
+                                        preexec_fn=os.setsid)
 
         # TODO: what if the agent and the simulator are running in different machines?
-        # # access through ssh, the server needs sshpass installed.
-        # # if the server where the agent and the simulator is the same, this step is not necessary
-        # cmd = "sshpass -p 123456 ssh -oStrictHostKeyChecking=no paola@146.175.219.154 uname -a"
-        # cmd = cmd.split()
-        # ssh = subprocess.Popen(cmd,
-        #                        stdin=subprocess.PIPE,
-        #                        stdout=subprocess.PIPE,
-        #                        stderr=subprocess.PIPE,
-        #                        universal_newlines=True,
-        #                        bufsize=0)
-        #
-        #
-        # # Send ssh commands to stdin
-        # ssh.stdin.write("uname -a\n")
-        # ssh.stdin.write("echo Hello from the other side\n")
-        # ssh.stdin.close()
-        #
-        # # Fetch output
-        # for line in ssh.stdout:
-        #     print(line.strip())
 
-
+    def stop_simulation(self):
+        if self.process:
+            # Send the SIGKILL signal to all the subprocesses with a given session id
+            print(f"Killing process: {self.process.pid}")
+            os.killpg(os.getpgid(self.process.pid), signal.SIGKILL)
+            self.first_observation = False
+            time.sleep(10)
