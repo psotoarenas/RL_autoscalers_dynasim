@@ -91,7 +91,9 @@ class DynaSimEnv(gym.Env):
         # we never end, therefore we have a unique episode
         done = False
 
-        return obs, reward, done, {'num_ms': self.dynasim.number_of_ms, 'action': action}
+        return obs, reward, done, {'num_ms': self.dynasim.number_of_ms,
+                                   'action': action,
+                                   'pid_simulation': self.dynasim.process.pid}
 
     def _next_observation(self):
         # observe the simulation status

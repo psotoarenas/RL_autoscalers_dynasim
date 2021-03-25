@@ -5,6 +5,8 @@ from Environment import DynaSimEnv
 import time
 import argparse
 import matplotlib.pyplot as plt
+import os
+import signal
 
 ########################################################################################################################
 # Command line arguments.
@@ -90,6 +92,12 @@ for i in range(timesteps_evaluation):
 
 print("Agent evaluation finished")
 
+# kill simulation before you leave
+pid_sim = info[0]["pid_simulation"]
+print(f"Killing process: {pid_sim}")
+os.killpg(os.getpgid(pid_sim), signal.SIGKILL)
+time.sleep(5)
+
 
 ########################################################################################################################
 # Plot your Results.
@@ -107,6 +115,4 @@ plt.ylabel('Number of MS')
 plt.xlabel('Timesteps')
 # plt.savefig('./num_ms.png', dpi=300)
 plt.show()
-
-# TODO: how to make sure to kill the relaunched simulation
 
