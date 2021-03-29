@@ -7,6 +7,7 @@ import argparse
 import matplotlib.pyplot as plt
 import os
 import signal
+import sys
 
 ########################################################################################################################
 # Command line arguments.
@@ -15,6 +16,7 @@ import signal
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
 parser.add_argument('--timesteps_eval', default=500, type=int, help='Number of interactions for evaluating agent')
+parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks to be simulated')
 parser.add_argument('--agent_name', default='dqn_dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/test/', help='Directory where the '
@@ -24,16 +26,21 @@ parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/
 args = parser.parse_args()
 
 ########################################################################################################################
-# Train Agent during timesteps_train
+# Train Agent during timesteps_train and simulation length in ticks terms
 ########################################################################################################################
 
 timesteps_train = args.timesteps_train
+sim_length = args.sim_length
+# simulation length should be longer than the number of timesteps to gracefully finish the process
+if not (sim_length >= timesteps_train + 2):
+    sys.exit("Simulation ticks must be larger than the timesteps for training. "
+             "At least sim_length = timesteps_train + 2")
 
 ########################################################################################################################
 # Vectorize Environment.
 ########################################################################################################################
 
-env = DummyVecEnv([lambda: DynaSimEnv(timesteps=timesteps_train, ai_ip=args.ip, sim_dir=args.sim_dir)])
+env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, sim_dir=args.sim_dir)])
 
 ########################################################################################################################
 # Create Agent.

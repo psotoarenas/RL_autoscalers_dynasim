@@ -26,7 +26,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, timesteps, ai_ip, sim_dir):
+    def __init__(self, sim_length, ai_ip, sim_dir):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -42,14 +42,10 @@ class DynaSimEnv(gym.Env):
         # initialize timesteps
         self.current_step = 0
 
-        # total timesteps
-        self.timesteps = timesteps
-
         # parameters to start simulation
         self.ip = ai_ip
         self.sim_dir = sim_dir
-        # simulation length should be longer than the number of timesteps to gracefully finish the process
-        self.sim_length = self.timesteps * 2
+        self.sim_length = sim_length
 
         # Setting discrete actions:
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
@@ -115,7 +111,7 @@ class DynaSimEnv(gym.Env):
         self.dynasim.stop_simulation()
 
         # start the simulation
-        self.dynasim.start_simulation(total_timesteps=self.sim_length, ip=self.ip, cwd=self.sim_dir)
+        self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir)
 
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:
@@ -133,11 +129,15 @@ if __name__ == "__main__":
     # at least two ticks more are needed in the total simulation length: the first tick to make the first observation
     # and the last tick to be able to finish the process properly
     total_timesteps = 200
+    sim_length = 2000
+    if not (sim_length >= total_timesteps + 2):
+        sys.exit("Simulation ticks must be larger than the timesteps for training. "
+                 "At least sim_length = timesteps_train + 2")
     # parameters to start simulation
     ip = input("Specify the IP where the python scripts are running")
     sim_dir = input("Specify the directory where the simulator runs")
     # without vectorized environments
-    env = DynaSimEnv(timesteps=total_timesteps, ai_ip=ip, sim_dir=sim_dir)
+    env = DynaSimEnv(sim_length=sim_length, ai_ip=ip, sim_dir=sim_dir)
     # Random Actions from action space -> the same as agent.learn but without saving to memory (learning)
     print(f"Action Space: {env.action_space}")
     print(f"Observation Space: {env.observation_space}")

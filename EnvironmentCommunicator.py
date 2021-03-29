@@ -201,7 +201,7 @@ class DynaSim:
         toSimMessage.traffic_generator_params.CopyFrom(message)
         return [toSimMessage]
 
-    def start_simulation(self, total_timesteps, tick_freq=5, ip="127.0.0.1",
+    def start_simulation(self, sim_length, tick_freq=1, ip="127.0.0.1",
                          cwd="../dynamicsim/mock-simulators/dynaSim/test/"):
         """
         This function starts automatically the simulation in a non-blocking subprocess. Here we assume that the agent
@@ -218,7 +218,6 @@ class DynaSim:
         """
         # if using shell=True in the Popen subprocess, the command should be as single string and not list
         # The os.setsid fn attach a session id to all child subprocesses created by the simulation (erlang, wooper)
-        sim_length = total_timesteps * tick_freq
         cmd = 'make -s dynasim_run CMD_LINE_OPT="--batch --ip {} --length {} --ticks {}"'.format(ip, sim_length,
                                                                                                  tick_freq)
         self.process = subprocess.Popen(cmd,
