@@ -26,6 +26,7 @@ class DynaSim:
         self.number_of_ms = 0
         self.total_cpu_usage = 0.0
         self.total_overflow = 0.0
+        self.max_peak_latency = 0.0
         self.ms_id = 3
         self.weight_per_ms = {}
         self.ms_removed = []
@@ -64,6 +65,7 @@ class DynaSim:
             self.number_of_ms = 0
             self.total_cpu_usage = 0.0
             self.total_overflow = 0.0
+            self.max_peak_latency = 0.0
 
             # get report per microservice
             for counter in message.counters.counters_float:
@@ -96,18 +98,24 @@ class DynaSim:
             self.total_cpu_usage += counter.value
         elif counter.metric == 'overflow':
             self.total_overflow += counter.value
+        elif counter.metric == 'peak_latency':
+            self.max_peak_latency = max(counter.value, self.max_peak_latency)
 
     def communicate_counters(self):
         # communicate counters (from simulator to environment)
         # right now the observation is only based on cpu usage. Needs to be changed to include more metrics
-        cpu_usage = 0
+        cpu_usage = 0.
+        overflow = 0.
+        latency = 0.
         if self.number_of_ms > 0:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
+            latency = self.max_peak_latency
             base_logger.info("MS: {}".format(self.number_of_ms))
-            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
-            base_logger.info("Overflow: {:.2f}".format(overflow))
-        return cpu_usage
+            base_logger.info("Cpu Usage: {:.4f}".format(cpu_usage))
+            base_logger.info("Overflow: {:.4f}".format(overflow))
+            base_logger.info("Latency: {:.4f}".format(latency))
+        return latency
 
     def getUpdate(self):
         # form an updated list of messages. This includes messages from the agent

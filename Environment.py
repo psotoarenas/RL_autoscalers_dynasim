@@ -42,6 +42,11 @@ class DynaSimEnv(gym.Env):
         # initialize timesteps
         self.current_step = 0
 
+        # define target latency = 20ms
+        self.target = 0.02
+        # define a tolerance of 20% the target latency
+        self.tolerance = 0.004
+
         # parameters to start simulation
         self.ip = ai_ip
         self.sim_dir = sim_dir
@@ -63,7 +68,7 @@ class DynaSimEnv(gym.Env):
         # print(f"Step: {self.current_step}")
 
         meaning = act_2_meaning[action]
-        base_logger.info(f"Action: {action}, {meaning}")
+        base_logger.info(f"Action: {action}")
         # print(f"Action: {action}, {meaning}")
 
         # take an action (according to a learned behavior)
@@ -79,10 +84,14 @@ class DynaSimEnv(gym.Env):
         obs = self._next_observation()
 
         # assign a reward
-        if obs >= 1.0 or obs < 0.5:
-            reward = -1
-        else:
-            reward = 0
+        # Reward 1
+        reward = -abs(obs - self.target)
+
+        # Reward 2
+        # if abs(obs - self.target) > self.tolerance:
+        #     reward = -1
+        # else:
+        #     reward = 0
 
         # we never end, therefore we have a unique episode
         done = False
