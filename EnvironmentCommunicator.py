@@ -27,6 +27,7 @@ class DynaSim:
         self.total_cpu_usage = 0.0
         self.total_overflow = 0.0
         self.max_peak_latency = 0.0
+        self.avg_latency = 0.0
         self.ms_id = 3
         self.weight_per_ms = {}
         self.ms_removed = []
@@ -66,6 +67,7 @@ class DynaSim:
             self.total_cpu_usage = 0.0
             self.total_overflow = 0.0
             self.max_peak_latency = 0.0
+            self.avg_latency = 0.0
 
             # get report per microservice
             for counter in message.counters.counters_float:
@@ -100,22 +102,27 @@ class DynaSim:
             self.total_overflow += counter.value
         elif counter.metric == 'peak_latency':
             self.max_peak_latency = max(counter.value, self.max_peak_latency)
+        elif counter.metric == 'avg_latency':
+            self.avg_latency += counter.value
 
     def communicate_counters(self):
         # communicate counters (from simulator to environment)
         # right now the observation is only based on cpu usage. Needs to be changed to include more metrics
         cpu_usage = 0.
         overflow = 0.
-        latency = 0.
+        peak_latency = 0.
+        avg_latency = 0.
         if self.number_of_ms > 0:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
-            latency = self.max_peak_latency
+            peak_latency = self.max_peak_latency
+            avg_latency = self.avg_latency / self.number_of_ms
             base_logger.info("MS: {}".format(self.number_of_ms))
             base_logger.info("Cpu Usage: {:.4f}".format(cpu_usage))
             base_logger.info("Overflow: {:.4f}".format(overflow))
-            base_logger.info("Latency: {:.4f}".format(latency))
-        return latency
+            base_logger.info("Peak Latency: {:.4f}".format(peak_latency))
+            base_logger.info("Avg Latency: {:.4f}".format(avg_latency))
+        return avg_latency
 
     def getUpdate(self):
         # form an updated list of messages. This includes messages from the agent
@@ -199,7 +206,7 @@ class DynaSim:
             self.memory *= 0.99
         self.tick += 1
         self.size_params[0] = new_params
-        base_logger.info("Jobs: {}".format(new_params))
+        base_logger.info("Traffic: {}".format(new_params))
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()
         message.distribution_rate = self.distribution_rate
