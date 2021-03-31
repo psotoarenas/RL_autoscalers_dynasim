@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import signal
 import sys
+import base_logger
 
 ########################################################################################################################
 # Command line arguments.
@@ -17,11 +18,11 @@ parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
 parser.add_argument('--timesteps_eval', default=500, type=int, help='Number of interactions for evaluating agent')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks to be simulated')
+parser.add_argument('--ticks', default=1, type=int, help='Ticks per second')
 parser.add_argument('--agent_name', default='dqn_dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
-parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/test/', help='Directory where the '
-                                                                                             'command to start the '
-                                                                                             'simulation needs to run')
+parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/test/',
+                    help='Directory where the command to start the simulation needs to run')
 
 args = parser.parse_args()
 
@@ -32,15 +33,17 @@ args = parser.parse_args()
 timesteps_train = args.timesteps_train
 sim_length = args.sim_length
 # simulation length should be longer than the number of timesteps to gracefully finish the process
-if not (sim_length >= timesteps_train + 2):
+if not (sim_length >= (timesteps_train + 2) * args.ticks):
     sys.exit("Simulation ticks must be larger than the timesteps for training. "
-             "At least sim_length = timesteps_train + 2")
+             "At least sim_length = (timesteps_train + 2) * ticks")
+# logger
+base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 
 ########################################################################################################################
 # Vectorize Environment.
 ########################################################################################################################
 
-env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, sim_dir=args.sim_dir)])
+env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, sim_dir=args.sim_dir, ticks=args.ticks)])
 
 ########################################################################################################################
 # Create Agent.
@@ -52,7 +55,7 @@ agent = DQN(MlpPolicy, env, verbose=1)   # to replace the agent, simply invoke a
 # Train Agent.
 ########################################################################################################################
 
-print(f"Agent training for {timesteps_train} timesteps")
+base_logger.info(f"Mode: training for {timesteps_train} timesteps")
 start = time.time()
 
 # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
@@ -61,7 +64,7 @@ agent.learn(total_timesteps=timesteps_train)
 
 end = time.time()
 
-print(f"Agent end training. Elapsed time: {end - start}")
+base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 
 ########################################################################################################################
 # Save Agent.
@@ -87,6 +90,7 @@ obs = env.reset()
 observations = []
 num_ms = []
 print(f"Agent {agent_name} will be evaluated")
+base_logger.info(f"Mode: testing for {timesteps_evaluation} timesteps")
 
 for i in range(timesteps_evaluation):
     # _states are only useful when using LSTM policies
@@ -97,7 +101,7 @@ for i in range(timesteps_evaluation):
     observations.append(obs[0, 0])
     num_ms.append(info[0]["num_ms"])
 
-print("Agent evaluation finished")
+base_logger.info("Agent evaluation finished")
 
 # kill simulation before you leave
 pid_sim = info[0]["pid_simulation"]

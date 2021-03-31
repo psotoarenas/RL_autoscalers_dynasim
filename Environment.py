@@ -26,7 +26,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, sim_dir):
+    def __init__(self, sim_length, ai_ip, sim_dir, ticks):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -41,16 +41,18 @@ class DynaSimEnv(gym.Env):
 
         # initialize timesteps
         self.current_step = 0
+        self.acc_reward = 0
 
         # define target latency = 20ms
         self.target = 0.02
         # define a tolerance of 20% the target latency
-        self.tolerance = 0.004
+        self.tolerance = 0.1
 
         # parameters to start simulation
         self.ip = ai_ip
         self.sim_dir = sim_dir
         self.sim_length = sim_length
+        self.ticks = ticks
 
         # Setting discrete actions:
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
@@ -85,13 +87,18 @@ class DynaSimEnv(gym.Env):
 
         # assign a reward
         # Reward 1
-        reward = -abs(obs - self.target)
+        # reward = -(obs - self.target)**2
 
         # Reward 2
-        # if abs(obs - self.target) > self.tolerance:
-        #     reward = -1
-        # else:
-        #     reward = 0
+        if abs(obs - self.target) > self.tolerance * self.target:
+            reward = -1
+        else:
+            reward = -abs((obs - self.target) / (self.tolerance * self.target))
+
+        self.acc_reward += reward
+        base_logger.info(f"Reward: {reward}")
+        base_logger.info(f"Target: {self.target}")
+        base_logger.info(f"Cum Reward: {self.acc_reward}")
 
         # we never end, therefore we have a unique episode
         done = False
@@ -120,7 +127,7 @@ class DynaSimEnv(gym.Env):
         self.dynasim.stop_simulation()
 
         # start the simulation
-        self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir)
+        self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks)
 
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:
