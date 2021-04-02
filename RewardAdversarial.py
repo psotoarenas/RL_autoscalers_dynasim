@@ -10,7 +10,9 @@ class RewardAdversarial:
         self.distribution_execution_time = 'uniform'
         self.distribution_size = 'exact'
         self.size_params = [300]
-        self.job_list = [433, 348, 950, 481, 25, 896, 156, 191, 674, 261, 897, 419, 950]
+        #self.job_list = [433, 348, 950, 481, 25, 896, 156, 191, 674, 261, 897, 419, 950]
+        with open('trafficTrace.csv') as f:
+            self.job_list = [int(el) for el in f.read().split()]
         self.rate_params = [100]
         self.memory = 0
         self.execution_time_params = [1]
@@ -18,14 +20,10 @@ class RewardAdversarial:
 
     def getUpdate(self):
 #        print(self.timemanager.getCurrentSimulationTime())
-#        if len(self.job_list):
-#            new_params = self.job_list.pop(0)
-#            self.size_params[0] = new_params
+        if len(self.job_list):
+            new_params = self.job_list.pop(0)
+            self.size_params[0] = new_params
         timeOfDay = self.timemanager.getCurrentSimulationTime()
-        new_params = max(int(300.0*(0.9+0.1*np.cos(np.pi*timeOfDay/864000.0))*(4.0 + 1.2*np.sin(2.0*np.pi*timeOfDay/86400.0) - 0.6*np.sin(6.0*np.pi*timeOfDay/86400.0) + 0.02*(np.sin(503.0*np.pi*timeOfDay/86400.0) - np.sin(709.0*np.pi*timeOfDay/86400.0)*random.expovariate(1.0))) + self.memory + 5.0*random.gauss(0.0, 1.0)), 0)
-        if(random.random() < 1e-4): self.memory += 200.0*random.expovariate(1.0)
-        else: self.memory *= 0.99
-        self.size_params[0] = new_params
         print(timeOfDay, new_params)
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()

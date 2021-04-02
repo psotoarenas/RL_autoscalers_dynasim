@@ -2,8 +2,6 @@ import threading
 import time
 import x_pb2
 import random
-from base_logger import logger
-import base_logger
 import TimeManagment
 
 
@@ -13,11 +11,24 @@ class RewardOptimizer:
         self.timemanager = timemanager
         self.total_cpu_usage = 0.0
         self.total_overflow = 0.0
+        self.max_peak_latency = 0.0
         self.weight_per_ms = {}
         self.ms_removed = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
-        base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
-        base_logger.timemanager = self.timemanager
+        self.oldlatency = 0.0
+        with open('PIcontroller.csv') as f:
+            f.readline()
+            line = f.readline()[:-1].split(sep=',')
+            self.tgtlatency = float(line[0])
+            self.alpha = float(line[1])
+            self.beta = float(line[2])
+            self.soft = int(line[3])
+        #self.tgtlatency = 0.02
+        #self.alpha = 0.1 # default 80.0
+        #self.beta = 100.0 # default 40.0
+        #self.soft = 1
+        self.fraction = 0.0 
+        #self.counter = 0
 
     def getUpdate(self):
         return self.load_algorithm()
@@ -28,31 +39,62 @@ class RewardOptimizer:
         if self.number_of_ms > 0:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
-            #print("#MS: {}".format(self.number_of_ms), end=', ')
-            #print("Cpu Usage: {:.2f}".format(cpu_usage), end=', ')
-            #print("Overflow: {:.2f}".format(overflow))
-            base_logger.info("MS: {}".format(self.number_of_ms))
-            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
-            base_logger.info("Overflow: {:.2f}".format(overflow))
+            latency = self.max_peak_latency
+            print("MS: {}".format(self.number_of_ms), end=', ')
+            print("Cpu Usage: {:.4f}".format(cpu_usage), end=', ')
+            print("Overflow: {:.4f}".format(overflow), end=', ')
+            print("Latency: {:.4f}".format(latency), end=', ')
+
             messages_to_send = []
 
-            if cpu_usage < 0.1 and self.number_of_ms > 1:
+            alpha = self.alpha
+            beta = self.beta
+            tgt = self.tgtlatency 
+            old = self.oldlatency
+            fraction = self.fraction
+            delta = alpha * (latency - tgt) + beta * (latency - old)
+            if self.soft==1 and self.number_of_ms>1: delta += fraction
+            else: fraction = 0.0
+
+            #print("delta: {:.4f}".format(delta), end=', ')
+            #print("fraction: {:.4f}".format(fraction), end=', ')
+
+            if delta < -1.0 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
                 self.ms_removed.append(ms_name)
                 delete_actor = self.remove_actor(ms_name, 'microservice')
-                print(delete_actor)
+                #print(delete_actor)
+                print("Action: -1")
+                self.fraction = delta + 1.0
                 messages_to_send.append(delete_actor)
 
-            elif cpu_usage > 0.8:
+            elif delta > 1.0 :
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                parameters = [300, round(random.random(), 2), 2]
-                new_actor = self.create_new_actor(actor_name, actor='simple_microservice', parameters=parameters)
-                print(new_actor)
+                parameters = [300, round(random.random(), 2)]
+                new_actor = self.create_new_actor(actor_name, actor='microservice', parameters=parameters)
+                #print(new_actor)
+                print("Action: +1")
+                self.fraction = delta - 1.0
                 messages_to_send.append(new_actor)
+
+            else:
+                print("Action: 0")
+                self.fraction = delta
+
+            #print("delta: {:.4f}".format(delta), end=', ')
+            #print("fraction: {:.4f}".format(self.fraction))
 
             self.number_of_ms = 0
             self.total_cpu_usage = 0.0
             self.total_overflow = 0.0
+            self.max_peak_latency = 0.0
+            self.oldlatency = latency
+
+            #self.counter += 1
+            #if self.counter%86400==0:
+            #    self.beta+=10.0
+            #    print("beta update:", self.beta)
+            #else: print("no update")
 
             return messages_to_send
 
@@ -68,8 +110,8 @@ class RewardOptimizer:
         print("Prev list: " + str(self.test_ms))
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
-                parameters = [100, random_ms.get(name), 2]
-                new_actor = self.create_new_actor(name, actor='simple_microservice', parameters=parameters)
+                parameters = [100, random_ms.get(name)]
+                new_actor = self.create_new_actor(name, actor='microservice', parameters=parameters)
                 messages_to_send.append(new_actor)
                 print("actor created")
 
@@ -124,6 +166,8 @@ class RewardOptimizer:
             self.total_cpu_usage += counter.value
         elif counter.metric == 'overflow':
             self.total_overflow += counter.value
+        elif counter.metric == 'peak_latency':
+            self.max_peak_latency = max(counter.value, self.max_peak_latency)
 
     def updateParams(self):
         while True:
