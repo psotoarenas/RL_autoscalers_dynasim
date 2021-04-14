@@ -9,6 +9,7 @@ import os
 import signal
 import sys
 import base_logger
+import numpy as np
 
 ########################################################################################################################
 # Command line arguments.
@@ -86,6 +87,7 @@ timesteps_evaluation = args.timesteps_eval
 ########################################################################################################################
 
 timestep_rewards = [0.0]
+episode_rewards = [0.0]
 obs = env.reset()
 observations = []
 num_ms = []
@@ -101,7 +103,17 @@ for i in range(timesteps_evaluation):
     observations.append(obs[0, 0])
     num_ms.append(info[0]["num_ms"])
 
+    # Stats
+    episode_rewards[-1] += reward
+    if done:
+        obs = env.reset()
+        episode_rewards.append(0.0)
+
 base_logger.info("Agent evaluation finished")
+
+# Compute mean reward for the last 100 episodes
+mean_100ep_reward = round(np.mean(episode_rewards[-100:]), 1)
+print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
 
 # kill simulation before you leave
 pid_sim = info[0]["pid_simulation"]
