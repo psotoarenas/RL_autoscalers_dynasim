@@ -122,7 +122,7 @@ class DynaSim:
             base_logger.info("Overflow: {:.4f}".format(overflow))
             base_logger.info("Peak Latency: {:.4f}".format(peak_latency))
             base_logger.info("Avg Latency: {:.4f}".format(avg_latency))
-        return avg_latency
+        return peak_latency
 
     def getUpdate(self):
         # form an updated list of messages. This includes messages from the agent
