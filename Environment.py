@@ -46,7 +46,7 @@ class DynaSimEnv(gym.Env):
         # define target latency = 20ms
         self.target = 0.02
         # define a tolerance of 20% the target latency
-        self.tolerance = 0.1
+        self.tolerance = 0.2
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -58,8 +58,7 @@ class DynaSimEnv(gym.Env):
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
 
         # Example for using image as input:
-        self.observation_space = spaces.Box(
-            low=0, high=2, shape=(1,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(1,), dtype=np.float32)
 
         # logger
         base_logger.default_extra = {'app_name': 'Environment', 'node': 'localhost'}
@@ -84,24 +83,53 @@ class DynaSimEnv(gym.Env):
 
         # observe the effect of the action on the simulation status
         obs = self._next_observation()
+        num_ms = self.dynasim.number_of_ms
+        overflow = self.dynasim.total_overflow
 
         # assign a reward
         # Reward 1
-        # reward = -(obs - self.target)**2
+        # reward = -abs(obs - self.target)
 
         # Reward 2
+        # if -abs(obs - self.target) > self.tolerance:
+        #     reward = -1
+        # else:
+        #     reward = 0
+
+        # Reward 3
+        # if -abs(obs - self.target) > self.tolerance:
+        #     reward = -1
+        # else:
+        #     reward = -abs((obs - self.target) / (self.tolerance * self.target))
+
+        # Reward 4
         if abs(obs - self.target) > self.tolerance * self.target:
-            reward = -1
+            # there are two cases that are not desirable:
+            if num_ms < 2:
+                # the agent keeps decreasing the num of MS -> the overflow increases
+                reward = -1 * overflow
+            else:
+                # the agent keeps increasing the num of MS -> the obs keeps at minimum
+                reward = -1 * num_ms
         else:
-            reward = -abs((obs - self.target) / (self.tolerance * self.target))
+            reward = -(obs - self.target) ** 2
+
+        # Reward 5
+        # reward = (1 / (obs - self.target)) - (obs - self.target)
+
+        # Reward 6
+        # reward = -(obs - self.target) ** 2
 
         self.acc_reward += reward
         base_logger.info(f"Reward: {reward}")
         base_logger.info(f"Target: {self.target}")
         base_logger.info(f"Cum Reward: {self.acc_reward}")
 
-        # we never end, therefore we have a unique episode
+        # if the agent creates more than 100 MSs or the overflow is greater than 500.,
+        # end episode and reset simulation
         done = False
+        if num_ms > 100 or overflow > 500.:
+            done = True
 
         return obs, reward, done, {'num_ms': self.dynasim.number_of_ms,
                                    'action': action,
