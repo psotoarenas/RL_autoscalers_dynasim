@@ -1,3 +1,5 @@
+import math
+
 import gym
 from gym import spaces
 from EnvironmentCommunicator import DynaSim
@@ -47,6 +49,9 @@ class DynaSimEnv(gym.Env):
         self.target = 0.02
         # define a tolerance of 20% the target latency
         self.tolerance = 0.2
+        # parameter from paper to tune (no information regarding these values)
+        self.alpha = 2.5
+        self.beta = 1
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -58,7 +63,7 @@ class DynaSimEnv(gym.Env):
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
 
         # Example for using image as input:
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(1,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(4,), dtype=np.float32)
 
         # logger
         base_logger.default_extra = {'app_name': 'Environment', 'node': 'localhost'}
@@ -83,42 +88,43 @@ class DynaSimEnv(gym.Env):
 
         # observe the effect of the action on the simulation status
         obs = self._next_observation()
-        num_ms = self.dynasim.number_of_ms
-        overflow = self.dynasim.total_overflow
 
         # assign a reward
-        # Reward 1
-        # reward = -abs(obs - self.target)
+        # Reward 1: based on latency
+        # reward = -abs(obs[1] - self.target)
 
-        # Reward 2
-        # if -abs(obs - self.target) > self.tolerance:
+        # Reward 2: based on latency
+        # if -abs(obs[1] - self.target) > self.tolerance:
         #     reward = -1
         # else:
         #     reward = 0
 
-        # Reward 3
-        # if -abs(obs - self.target) > self.tolerance:
+        # Reward 3: based on latency
+        # if -abs(obs[1] - self.target) > self.tolerance:
         #     reward = -1
         # else:
-        #     reward = -abs((obs - self.target) / (self.tolerance * self.target))
+        #     reward = -abs((obs[1] - self.target) / (self.tolerance * self.target))
 
-        # Reward 4
-        if abs(obs - self.target) > self.tolerance * self.target:
+        # Reward 4: based on latency
+        if abs(obs[1] - self.target) > self.tolerance * self.target:
             # there are two cases that are not desirable:
-            if num_ms < 2:
+            if obs[3] < 2:
                 # the agent keeps decreasing the num of MS -> the overflow increases
-                reward = -1 * overflow
+                reward = -1 * obs[2]
             else:
                 # the agent keeps increasing the num of MS -> the obs keeps at minimum
-                reward = -1 * num_ms
+                reward = -1 * obs[3]
         else:
-            reward = -(obs - self.target) ** 2
+            reward = -(obs[1] - self.target) ** 2
 
-        # Reward 5
-        # reward = (1 / (obs - self.target)) - (obs - self.target)
+        # Reward 5: based on latency
+        # reward = (1 / (obs[1] - self.target)) - (obs[1] - self.target)
 
-        # Reward 6
-        # reward = -(obs - self.target) ** 2
+        # Reward 6: based on latency
+        # reward = -(obs[1] - self.target) ** 2
+
+        # Reward 7: -(latency/target) - (alpha*num_ms*e(-beta*cpu*overflow)
+        # reward = -(obs[1] / self.target) - (self.alpha * obs[3] * math.exp(- self.beta * obs[0] * obs[2]))
 
         self.acc_reward += reward
         base_logger.info(f"Reward: {reward}")
@@ -128,16 +134,18 @@ class DynaSimEnv(gym.Env):
         # if the agent creates more than 100 MSs or the overflow is greater than 500.,
         # end episode and reset simulation
         done = False
-        if num_ms > 100 or overflow > 500.:
+        if obs[3] > 100 or obs[2] > 500.:
             done = True
+            reward = 10 * reward
 
         return obs, reward, done, {'num_ms': self.dynasim.number_of_ms,
                                    'action': action,
                                    'pid_simulation': self.dynasim.process.pid}
 
     def _next_observation(self):
-        # observe the simulation status
-        obs = self.dynasim.communicate_counters()
+        # observe the simulation status = (cpu, latency, overflow, num_ms)
+        cpu, latency, overflow, num_ms = self.dynasim.communicate_counters()
+        obs = (cpu, latency, overflow, num_ms)
         return obs
 
     def _take_action(self, action):
