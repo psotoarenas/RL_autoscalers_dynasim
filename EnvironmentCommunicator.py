@@ -95,7 +95,7 @@ class DynaSim:
             self.ms_started.remove(counter.actor_name)
         if counter.actor_name not in self.weight_per_ms:
             self.weight_per_ms[counter.actor_name] = 0.5
-        if counter.metric == 'cpu_usage':
+        if counter.metric == 'cpu_usage' and 'MS' in counter.actor_name:
             self.number_of_ms += 1
             self.total_cpu_usage += counter.value
         elif counter.metric == 'overflow':
@@ -134,7 +134,7 @@ class DynaSim:
     def increase_vnf(self):
         # form the message create actor
         actor_name = "MS_{}".format(self.ms_id)
-        parameters = [300, 0]
+        parameters = [1.0, 1.0, 0]  # num_current_threads(CPU consumption per cycle), limit_of_threads, boot_time
         new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice',
                                                  parameters=parameters,
                                                  incoming_actors=["LoadBalancer"], outgoing_actors=[])
@@ -220,7 +220,7 @@ class DynaSim:
         toSimMessage.traffic_generator_params.CopyFrom(message)
         return [toSimMessage]
 
-    def start_simulation(self, sim_length, tick_freq=1, ip="127.0.0.1",
+    def start_simulation(self, sim_length, tick_freq=1, report_ticks=1, ip="127.0.0.1",
                          cwd="../dynamicsim/mock-simulators/dynaSim/test/"):
         """
         This function starts automatically the simulation in a non-blocking subprocess. Here we assume that the agent
@@ -231,14 +231,16 @@ class DynaSim:
 
         :param total_timesteps: total time steps that the agent will train or predict. Integer
         :param tick_freq: number of ticks per second
+        :param report_ticks: how ticks a report is generated
         :param ip: ip address from the server. It is assumed that both agent and simulation run in the same machine
         :param cwd: directory from which the make command will run
         :return:
         """
         # if using shell=True in the Popen subprocess, the command should be as single string and not list
         # The os.setsid fn attach a session id to all child subprocesses created by the simulation (erlang, wooper)
-        cmd = 'make -s dynasim_run CMD_LINE_OPT="--batch --ip {} --length {} --ticks {}"'.format(ip, sim_length,
-                                                                                                 tick_freq)
+        # You can play with ticks_per_second and report_ticks,
+        # if you want a report every second report_ticks = ticks_per_second
+        cmd = 'make -s dynasim_run CMD_LINE_OPT="--batch --ip {} --length {} --ticks_per_second {} --report_ticks {}"'.format(ip, sim_length, tick_freq, report_ticks)
         self.process = subprocess.Popen(cmd,
                                         stdout=subprocess.DEVNULL,
                                         shell=True,
@@ -253,4 +255,5 @@ class DynaSim:
             print(f"Killing process: {self.process.pid}")
             os.killpg(os.getpgid(self.process.pid), signal.SIGKILL)
             self.first_observation = False
+            self.tick = 0
             time.sleep(10)

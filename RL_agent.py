@@ -18,8 +18,9 @@ import numpy as np
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
 parser.add_argument('--timesteps_eval', default=500, type=int, help='Number of interactions for evaluating agent')
-parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks to be simulated')
-parser.add_argument('--ticks', default=1, type=int, help='Ticks per second')
+parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
+parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
+parser.add_argument('--report_ticks', default=1, type=int, help='How many ticks a report is generated')
 parser.add_argument('--agent_name', default='dqn_dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/test/',
@@ -34,9 +35,9 @@ args = parser.parse_args()
 timesteps_train = args.timesteps_train
 sim_length = args.sim_length
 # simulation length should be longer than the number of timesteps to gracefully finish the process
-if not (sim_length >= (timesteps_train + 2) * args.ticks):
+if not (sim_length >= (timesteps_train + 2) * args.ticks_per_second):
     sys.exit("Simulation ticks must be larger than the timesteps for training. "
-             "At least sim_length = (timesteps_train + 2) * ticks")
+             "At least sim_length = (timesteps_train + 2) * ticks_per_second")
 # logger
 base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 
@@ -44,13 +45,15 @@ base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 # Vectorize Environment.
 ########################################################################################################################
 
-env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, sim_dir=args.sim_dir, ticks=args.ticks)])
+env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, sim_dir=args.sim_dir,
+                                      ticks=args.ticks_per_second, report=args.report_ticks)])
 
 ########################################################################################################################
 # Create Agent.
 ########################################################################################################################
 
-agent = DQN(MlpPolicy, env, verbose=1)   # to replace the agent, simply invoke another method
+# to replace the agent, simply invoke another method
+agent = DQN(MlpPolicy, env, verbose=1, tensorboard_log="./dynasim_agent_tensorboard")
 
 ########################################################################################################################
 # Train Agent.

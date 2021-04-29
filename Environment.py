@@ -28,7 +28,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, sim_dir, ticks):
+    def __init__(self, sim_length, ai_ip, sim_dir, ticks, report):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -58,6 +58,7 @@ class DynaSimEnv(gym.Env):
         self.sim_dir = sim_dir
         self.sim_length = sim_length
         self.ticks = ticks
+        self.report = report
 
         # Setting discrete actions:
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
@@ -134,7 +135,8 @@ class DynaSimEnv(gym.Env):
         # if the agent creates more than 100 MSs or the overflow is greater than 500.,
         # end episode and reset simulation
         done = False
-        if obs[3] > 100 or obs[2] > 500.:
+        # server is limited to 53 MS
+        if obs[3] > 50 or obs[2] > 500.:
             done = True
             reward = 10 * reward
 
@@ -163,7 +165,8 @@ class DynaSimEnv(gym.Env):
         self.dynasim.stop_simulation()
 
         # start the simulation
-        self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks)
+        self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
+                                      report_ticks=self.report)
 
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:
@@ -189,7 +192,7 @@ if __name__ == "__main__":
     ip = input("Specify the IP where the python scripts are running")
     sim_dir = input("Specify the directory where the simulator runs")
     # without vectorized environments
-    env = DynaSimEnv(sim_length=sim_length, ai_ip=ip, sim_dir=sim_dir)
+    env = DynaSimEnv(sim_length=sim_length, ai_ip=ip, sim_dir=sim_dir, ticks=5, report=5)
     # Random Actions from action space -> the same as agent.learn but without saving to memory (learning)
     print(f"Action Space: {env.action_space}")
     print(f"Observation Space: {env.observation_space}")
