@@ -20,6 +20,9 @@ class TimeManagement:
     def getCurrentSimulationTime(self):
         return self.current_time
 
+    def getCurrentSimulationTick(self):
+        return self.current_tick
+
     def getCurrentSimulationTimeString(self):
         dt_object = datetime.fromtimestamp(self.current_time)
         return dt_object.strftime("%Y/%m/%d %H:%M:%S")
