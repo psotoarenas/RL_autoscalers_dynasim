@@ -8,7 +8,6 @@ import TimeManagment
 import numpy as np
 import jsonstreams
 
-
 class RewardOptimizer:
     def __init__(self, timemanager):
         self.number_of_ms = 0
@@ -33,19 +32,16 @@ class RewardOptimizer:
 
         self.cpu = 1.0
         self.last_report = time.time()
-        self.json_file = jsonstreams.Stream(jsonstreams.Type.object, filename='test.json')
 
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
         base_logger.timemanager = self.timemanager
 
     def getUpdate(self):
         print('Time: ' + str((time.time() - self.last_report) * 1000) + ' ms')
-        self.json_file.write(str(self.timemanager.getCurrentSimulationTick()), (time.time() - self.last_report) * 1000)
         self.last_report = time.time()
         messages_ro = self.load_algorithm()
         messages_ra = self.getUpdateRA()
         return messages_ra + messages_ro
-        #return messages_ro selection_RO_or_RA_RO
 
     def load_algorithm(self):
         self.ms_removed = []
@@ -56,8 +52,8 @@ class RewardOptimizer:
             cpu_usage = self.total_cpu_usage / self.number_of_ms
             overflow = self.total_overflow / self.number_of_ms
             base_logger.info("MS: {}".format(self.number_of_ms))
-            # base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
-            # base_logger.info("Overflow: {:.2f}".format(overflow))
+            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
+            base_logger.info("Overflow: {:.2f}".format(overflow))
 
             if cpu_usage < 0.4 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
@@ -75,15 +71,15 @@ class RewardOptimizer:
                 self.ms_started.append(actor_name)
                 messages_to_send.append(new_actor)
 
-            ParameterMessages = self.create_parameter_message([self.cpu])
-            toSimMessage = x_pb2.ToSimulationMessage()
-            update_weight = x_pb2.UpdateParameterActor()
-            update_weight.type = "microservice"
-            update_weight.name = "MS_1"
-            update_weight.parameter_name = "current_thread_limit"
-            update_weight.parameters.extend(ParameterMessages)
-            toSimMessage.update_parameter_actor.CopyFrom(update_weight)
-            messages_to_send.append(toSimMessage)
+            # ParameterMessages = self.create_parameter_message([self.cpu])
+            # toSimMessage = x_pb2.ToSimulationMessage()
+            # update_weight = x_pb2.UpdateParameterActor()
+            # update_weight.type = "microservice"
+            # update_weight.name = "MS_1"
+            # update_weight.parameter_name = "current_thread_limit"
+            # update_weight.parameters.extend(ParameterMessages)
+            # toSimMessage.update_parameter_actor.CopyFrom(update_weight)
+            # messages_to_send.append(toSimMessage)
 
             self.number_of_ms = 0
             self.total_cpu_usage = 0.0
@@ -97,7 +93,7 @@ class RewardOptimizer:
         messages_to_send = []
         i = 1
         for ms in range(5):
-            weight = round(max(0.0, float(random.randint(-5, 10))/100), 3)
+            weight = round(max(0.1, float(random.randint(-10, 100))/100), 3)
             name = 'MS_{}'.format(i)
             i += 1
             random_ms[name] = weight
@@ -105,8 +101,21 @@ class RewardOptimizer:
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
                 parameters = [300, 0]
-                new_actor = self.create_new_microservice(name, actor_type='simple_microservice', parameters=parameters)
+                new_actor = self.create_new_microservice(name, actor_type='class_SimpleMicroservice', parameters=parameters,
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
                 messages_to_send.append(new_actor)
+
+                ParameterMessages = self.create_parameter_message([name, weight])
+                toSimMessage = x_pb2.ToSimulationMessage()
+                update_weight = x_pb2.UpdateParameterActor()
+                update_weight.type = "microservice"
+                update_weight.name = "LoadBalancer"
+                update_weight.parameter_name = "weight"
+                update_weight.parameters.extend(ParameterMessages)
+                toSimMessage.update_parameter_actor.CopyFrom(update_weight)
+
+                messages_to_send.append(toSimMessage)
+
                 print("actor created")
 
             elif weight != 0 and random_ms.get(name) == 0:
@@ -114,13 +123,14 @@ class RewardOptimizer:
                 messages_to_send.append(delete_actor)
                 print("actor deleted")
 
-            elif weight != 0 and random_ms.get(name) == 0:
+            elif weight != 0 and random_ms.get(name) != 0:
+                ParameterMessages = self.create_parameter_message([name, weight])
                 toSimMessage = x_pb2.ToSimulationMessage()
                 update_weight = x_pb2.UpdateParameterActor()
                 update_weight.type = "microservice"
-                update_weight.name = name
+                update_weight.name = "LoadBalancer"
                 update_weight.parameter_name = "weight"
-                update_weight.value = weight
+                update_weight.parameters.extend(ParameterMessages)
                 toSimMessage.update_parameter_actor.CopyFrom(update_weight)
                 messages_to_send.append(toSimMessage)
 
@@ -159,7 +169,7 @@ class RewardOptimizer:
             self.ms_started.remove(counter.actor_name)
         if counter.actor_name not in self.weight_per_ms:
             self.weight_per_ms[counter.actor_name] = 0.5
-        if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
+        if counter.metric == 'cpu_usage' and "MS" in counter.actor_name :
             self.number_of_ms += 1
             self.total_cpu_usage += counter.value
         elif counter.metric == 'overflow':
@@ -196,35 +206,35 @@ class RewardOptimizer:
 
         tick = self.timemanager.getCurrentSimulationTick()
 
-        if tick < 50:
+        if tick < 500:
             self.size_params[0] = 250
-        elif tick < 100:
+        elif tick < 1000:
             self.size_params[0] = 490
-        elif tick < 150:
+        elif tick < 1500:
             self.size_params[0] = 240 * 3 + 10
-        elif tick < 200:
+        elif tick < 2000:
             self.size_params[0] = 240 * 4 + 10
-        elif tick < 250:
+        elif tick < 2500:
             self.size_params[0] = 240 * 5 + 10
-        elif tick < 300:
+        elif tick < 3000:
             self.size_params[0] = 240 * 6 + 10
-        elif tick < 350:
+        elif tick < 3500:
             self.size_params[0] = 240 * 7 + 10
-        elif tick < 400:
+        elif tick < 4000:
             self.size_params[0] = 240 * 8 + 10
-        elif tick < 450:
+        elif tick < 4500:
             self.size_params[0] = 240 * 9 + 10
-        elif tick < 500:
+        elif tick < 5000:
             self.size_params[0] = 240 * 10 + 10
-        elif tick < 550:
+        elif tick < 5500:
             self.size_params[0] = 240 * 11 + 10
-        elif tick < 600:
+        elif tick < 6000:
             self.size_params[0] = 240 * 12 + 10
-        elif tick < 65000:
+        elif tick < 6500:
             self.size_params[0] = 240 * 13 + 10
-        elif tick < 70000:
+        elif tick < 7000:
             self.size_params[0] = 240 * 14 + 10
-        elif tick < 75000:
+        elif tick < 7500:
             self.size_params[0] = 240 * 15 + 10
         #print(timeOfDay, new_params)
         toSimMessage = x_pb2.ToSimulationMessage()
