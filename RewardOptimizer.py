@@ -14,6 +14,7 @@ class RewardOptimizer:
         self.max_peak_latency = 0.0
         self.weight_per_ms = {}
         self.ms_removed = []
+        self.ms_started = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         self.oldlatency = 0.0
         with open('PIcontroller.csv') as f:
@@ -68,11 +69,14 @@ class RewardOptimizer:
                 self.fraction = delta + 1.0
                 messages_to_send.append(delete_actor)
 
-            elif delta > 1.0 :
+            elif delta > 1.0 and len(self.ms_started) == 0:
                 actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                parameters = [300, round(random.random(), 2)]
-                new_actor = self.create_new_actor(actor_name, actor='microservice', parameters=parameters)
-                #print(new_actor)
+                parameters = [1.0, 1.0, 2]
+                new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice',
+                                                         parameters=parameters,
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
+
+                self.ms_started.append(actor_name)
                 print("Action: +1")
                 self.fraction = delta - 1.0
                 messages_to_send.append(new_actor)
@@ -110,8 +114,11 @@ class RewardOptimizer:
         print("Prev list: " + str(self.test_ms))
         for (name, weight) in self.test_ms.items():
             if weight == 0 and random_ms.get(name) != 0:
-                parameters = [100, random_ms.get(name)]
-                new_actor = self.create_new_actor(name, actor='microservice', parameters=parameters)
+                parameters = [1.0, 1.0, 0]
+                new_actor = self.create_new_microservice(name, actor_type='class_SimpleMicroservice',
+                                                         parameters=parameters,
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
+
                 messages_to_send.append(new_actor)
                 print("actor created")
 
@@ -135,25 +142,27 @@ class RewardOptimizer:
         self.test_ms = random_ms
         return messages_to_send
 
-    def create_new_actor(self, name, actor='microservice', parameters=[]):
+    def create_new_microservice(self, name, actor_type, incoming_actors, outgoing_actors=[], parameters=[]):
+        ParameterMessages = self.create_parameter_message(parameters)
         toSimMessage = x_pb2.ToSimulationMessage()
-        create_actors = x_pb2.CreateActors()
-        message = x_pb2.CreateActor()
-        message.type = actor
+        create_actor = x_pb2.CreateActor()
+        message = x_pb2.CreateMicroservice()
+        message.actor_type = actor_type
         message.name = name
-        message.parameters.extend(parameters)
-        create_actors.create_actors.add().CopyFrom(message)
-        toSimMessage.create_actors.CopyFrom(create_actors)
+        message.server_name = "Server_1"
+        message.incoming_actors.extend(incoming_actors)
+        message.outgoing_actors.extend(outgoing_actors)
+        message.parameters.extend(ParameterMessages)
+        create_actor.microservice.CopyFrom(message)
+        toSimMessage.create_actor.CopyFrom(create_actor)
         return toSimMessage
 
     def remove_actor(self, name, actor='microservice'):
         toSimMessage = x_pb2.ToSimulationMessage()
-        remove_actors = x_pb2.RemoveActors()
         message = x_pb2.RemoveActor()
         message.type = actor
         message.name = name
-        remove_actors.remove_actors.add().CopyFrom(message)
-        toSimMessage.remove_actors.CopyFrom(remove_actors)
+        toSimMessage.remove_actor.CopyFrom(message)
         return toSimMessage
 
     def add_counter(self, counter):
@@ -161,13 +170,26 @@ class RewardOptimizer:
             return
         if counter.actor_name not in self.weight_per_ms:
             self.weight_per_ms[counter.actor_name] = 0.5
-        if counter.metric == 'cpu_usage':
+        if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
             self.number_of_ms += 1
             self.total_cpu_usage += counter.value
         elif counter.metric == 'overflow':
             self.total_overflow += counter.value
         elif counter.metric == 'peak_latency':
             self.max_peak_latency = max(counter.value, self.max_peak_latency)
+
+    def create_parameter_message(self, parameters):
+        list_parameter_messages = []
+        for parameter in parameters:
+            param_message = x_pb2.Parameter()
+            if isinstance(parameter, (float, int)):
+                param_message.float_value = parameter
+            else:
+                param_message.string_value = parameter
+
+            list_parameter_messages.append(param_message)
+
+        return list_parameter_messages
 
     def updateParams(self):
         while True:
