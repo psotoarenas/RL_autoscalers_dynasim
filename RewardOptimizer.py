@@ -57,8 +57,11 @@ class RewardOptimizer:
             if self.soft==1 and self.number_of_ms>1: delta += fraction
             else: fraction = 0.0
 
-            #print("delta: {:.4f}".format(delta), end=', ')
-            #print("fraction: {:.4f}".format(fraction), end=', ')
+            print("delta: {:.4f}".format(delta), end=', ')
+            print("fraction: {:.4f}".format(fraction), end=', ')
+            print('#swpms', self.weight_per_ms, end=', ')
+            if self.number_of_ms != len(self.weight_per_ms):
+                print('PANIC', end=', ')
 
             if delta < -1.0 and self.number_of_ms > 1:
                 ms_name, _ = self.weight_per_ms.popitem()
@@ -168,8 +171,12 @@ class RewardOptimizer:
     def add_counter(self, counter):
         if counter.actor_name in self.ms_removed:
             return
-        if counter.actor_name not in self.weight_per_ms:
+        if counter.actor_name not in self.weight_per_ms and counter.actor_name not in self.ms_removed and "MS" in counter.actor_name:
             self.weight_per_ms[counter.actor_name] = 0.5
+#        if counter.actor_name not in self.weight_per_ms:
+#            self.weight_per_ms[counter.actor_name] = 0.5
+        if counter.actor_name in self.ms_started:
+            self.ms_started.remove(counter.actor_name)
         if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
             self.number_of_ms += 1
             self.total_cpu_usage += counter.value

@@ -22,11 +22,12 @@ class CommunicationRA:
     def handle_message(self, message: x_pb2.ToPythonMessage):
         self.timemanager.updateTime(message.tick_offset)
         if message.HasField("info"):
+            print(message)
             self._communicator.set_push_socket(message.info.ipaddress)
             self.timemanager.initializeTime(message.info.tick_length)
 
         if message.HasField("register_communicator"):
-            #print(message)
+            print(message)
             self.ro_pid = message.register_communicator.pid
 
         if message.HasField("counters"):
