@@ -2,6 +2,7 @@ import threading
 import time
 import x_pb2
 import random
+from MicroserviceDataClass import MicroserviceDataClass
 import TimeManagment
 
 
@@ -13,8 +14,7 @@ class RewardOptimizer:
         self.total_overflow = 0.0
         self.max_peak_latency = 0.0
         self.weight_per_ms = {}
-        self.ms_removed = []
-        self.ms_started = []
+        self.list_ms = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         self.oldlatency = 0.0
         with open('PIcontroller.csv') as f:
@@ -36,12 +36,33 @@ class RewardOptimizer:
         #return self.weight_test()
 
     def load_algorithm(self):
-        self.ms_removed = []
-        if self.number_of_ms > 0:
-            cpu_usage = self.total_cpu_usage / self.number_of_ms
-            overflow = self.total_overflow / self.number_of_ms
-            latency = self.max_peak_latency
-            print("MS: {}".format(self.number_of_ms), end=', ')
+        # for ms in self.list_ms:
+        #     print(
+        #         'Name: {}, CPU: {:.2f}, Overflow: {}, Status: {}, Server: {}, Latency: {:.3f}'.format(ms.name, ms.cpu_usage, ms.overflow,
+        #                                                                              ms.state, ms.server, ms.peak_latency))
+        shutdown_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'SHUTDOWN']
+
+        for ms in shutdown_ms:
+            self.list_ms.remove(ms)
+
+        active_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'RUNNING']
+        booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
+        all_ms = [x for x in self.list_ms if 'MS' in x.name]
+
+        if len(active_ms) > 0:
+            cpu_usage = 0
+            overflow = 0
+            latency = 0
+
+            for ms in active_ms:
+                cpu_usage += ms.cpu_usage
+                overflow += ms.overflow
+                if ms.peak_latency > latency:
+                    latency = ms.peak_latency
+
+            cpu_usage = cpu_usage / len(active_ms)
+            overflow = overflow / len(active_ms)
+            print("MS: {}".format(len(active_ms)), end=', ')
             print("Cpu Usage: {:.4f}".format(cpu_usage), end=', ')
             print("Overflow: {:.4f}".format(overflow), end=', ')
             print("Latency: {:.4f}".format(latency), end=', ')
@@ -60,23 +81,20 @@ class RewardOptimizer:
             #print("delta: {:.4f}".format(delta), end=', ')
             #print("fraction: {:.4f}".format(fraction), end=', ')
 
-            if delta < -1.0 and self.number_of_ms > 1:
-                ms_name, _ = self.weight_per_ms.popitem()
-                self.ms_removed.append(ms_name)
-                delete_actor = self.remove_actor(ms_name, 'microservice')
-                #print(delete_actor)
+            if delta < -1.0 and len(active_ms) > 1:
+                ms_to_delete = active_ms.pop()
+                delete_actor = self.remove_actor(ms_to_delete.name, 'microservice')
                 print("Action: -1")
                 self.fraction = delta + 1.0
                 messages_to_send.append(delete_actor)
 
-            elif delta > 1.0 and len(self.ms_started) == 0:
-                actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
+            elif delta > 1.0 and len(booting_ms) == 0:
+                actor_name = "MS_{}".format(len(all_ms) + 1)
                 parameters = [1.0, 1.0, 2]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice',
                                                          parameters=parameters,
                                                          incoming_actors=["LoadBalancer"], outgoing_actors=[])
 
-                self.ms_started.append(actor_name)
                 print("Action: +1")
                 self.fraction = delta - 1.0
                 messages_to_send.append(new_actor)
@@ -88,10 +106,10 @@ class RewardOptimizer:
             #print("delta: {:.4f}".format(delta), end=', ')
             #print("fraction: {:.4f}".format(self.fraction))
 
-            self.number_of_ms = 0
-            self.total_cpu_usage = 0.0
-            self.total_overflow = 0.0
-            self.max_peak_latency = 0.0
+            # self.number_of_ms = 0
+            # self.total_cpu_usage = 0.0
+            # self.total_overflow = 0.0
+            # self.max_peak_latency = 0.0
             self.oldlatency = latency
 
             #self.counter += 1
@@ -166,17 +184,41 @@ class RewardOptimizer:
         return toSimMessage
 
     def add_counter(self, counter):
-        if counter.actor_name in self.ms_removed:
-            return
-        if counter.actor_name not in self.weight_per_ms:
-            self.weight_per_ms[counter.actor_name] = 0.5
-        if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
-            self.number_of_ms += 1
-            self.total_cpu_usage += counter.value
-        elif counter.metric == 'overflow':
-            self.total_overflow += counter.value
-        elif counter.metric == 'peak_latency':
-            self.max_peak_latency = max(counter.value, self.max_peak_latency)
+        if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
+            new_ms = MicroserviceDataClass(counter.actor_name)
+            self.list_ms.append(new_ms)
+        else:
+            new_ms = [x for x in self.list_ms if x.name == counter.actor_name][0]
+
+        if counter.metric == 'cpu_usage':
+            new_ms.cpu_usage = counter.value
+        if counter.metric == 'overflow':
+            new_ms.overflow = counter.value
+        if counter.metric == 'status':
+            new_ms.state = counter.value
+        if counter.metric == 'peak_latency':
+            new_ms.peak_latency = counter.value
+        if counter.metric == 'service_list':
+            ms_on_server = counter.value.split(',')
+            for ms_name in ms_on_server:
+                if not contains(self.list_ms, lambda x: x.name == ms_name):
+                    ms = MicroserviceDataClass(ms_name)
+                    self.list_ms.append(new_ms)
+                else:
+                    ms = [x for x in self.list_ms if x.name == ms_name][0]
+                ms.server = counter.actor_name
+
+        # if counter.actor_name in self.ms_removed:
+        #     return
+        # if counter.actor_name not in self.weight_per_ms:
+        #     self.weight_per_ms[counter.actor_name] = 0.5
+        # if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
+        #     self.number_of_ms += 1
+        #     self.total_cpu_usage += counter.value
+        # elif counter.metric == 'overflow':
+        #     self.total_overflow += counter.value
+        # elif counter.metric == 'peak_latency':
+        #     self.max_peak_latency = max(counter.value, self.max_peak_latency)
 
     def create_parameter_message(self, parameters):
         list_parameter_messages = []
@@ -198,3 +240,10 @@ class RewardOptimizer:
     def run(self):
         x = threading.Thread(target=self.updateParams)
         x.start()
+
+
+def contains(list, filter):
+    for x in list:
+        if filter(x):
+            return True
+    return False
