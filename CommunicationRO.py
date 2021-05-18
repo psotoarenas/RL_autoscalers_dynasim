@@ -36,6 +36,9 @@ class CommunicationRO:
             for counter in message.counters.counters_float:
                 self.ro_agent.add_counter(counter)
 
+            for counter in message.counters.counters_string:
+                self.ro_agent.add_counter(counter)
+
             if self.ro_pid != '':
                 messages = self.ro_agent.getUpdate()
                 if messages is not None:
