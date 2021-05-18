@@ -10,10 +10,6 @@ class RewardOptimizer:
     def __init__(self, timemanager):
         self.number_of_ms = 0
         self.timemanager = timemanager
-        self.total_cpu_usage = 0.0
-        self.total_overflow = 0.0
-        self.max_peak_latency = 0.0
-        self.weight_per_ms = {}
         self.list_ms = []
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         self.oldlatency = 0.0
@@ -75,7 +71,7 @@ class RewardOptimizer:
             old = self.oldlatency
             fraction = self.fraction
             delta = alpha * (latency - tgt) + beta * (latency - old)
-            if self.soft==1 and self.number_of_ms>1: delta += fraction
+            if self.soft == 1 and len(active_ms) > 1: delta += fraction
             else: fraction = 0.0
 
             #print("delta: {:.4f}".format(delta), end=', ')
@@ -106,10 +102,6 @@ class RewardOptimizer:
             #print("delta: {:.4f}".format(delta), end=', ')
             #print("fraction: {:.4f}".format(self.fraction))
 
-            # self.number_of_ms = 0
-            # self.total_cpu_usage = 0.0
-            # self.total_overflow = 0.0
-            # self.max_peak_latency = 0.0
             self.oldlatency = latency
 
             #self.counter += 1
@@ -207,18 +199,6 @@ class RewardOptimizer:
                 else:
                     ms = [x for x in self.list_ms if x.name == ms_name][0]
                 ms.server = counter.actor_name
-
-        # if counter.actor_name in self.ms_removed:
-        #     return
-        # if counter.actor_name not in self.weight_per_ms:
-        #     self.weight_per_ms[counter.actor_name] = 0.5
-        # if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
-        #     self.number_of_ms += 1
-        #     self.total_cpu_usage += counter.value
-        # elif counter.metric == 'overflow':
-        #     self.total_overflow += counter.value
-        # elif counter.metric == 'peak_latency':
-        #     self.max_peak_latency = max(counter.value, self.max_peak_latency)
 
     def create_parameter_message(self, parameters):
         list_parameter_messages = []
