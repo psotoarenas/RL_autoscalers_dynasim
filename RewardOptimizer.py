@@ -7,7 +7,7 @@ import base_logger
 from MicroserviceDataClass import MicroserviceDataClass
 import TimeManagment
 import numpy as np
-import jsonstreams
+import shortuuid
 
 class RewardOptimizer:
     def __init__(self, timemanager):
@@ -73,7 +73,8 @@ class RewardOptimizer:
                 messages_to_send.append(delete_actor)
 
             elif cpu_usage > 0.8 and len(self.ms_started) == 0:
-                actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
+                # actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
+                actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
                 parameters = [1.0, 1.0, 1]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
                                                          incoming_actors=["LoadBalancer"], outgoing_actors=[], server=self.get_best_server())
@@ -175,9 +176,9 @@ class RewardOptimizer:
                 delete_actor = self.remove_actor(ms_to_delete.name, 'microservice')
                 print("Deleted: {}".format(ms_to_delete.name))
                 messages_to_send.append(delete_actor)
-
             elif cpu_usage > 0.8 and len(booting_ms) == 0:
-                actor_name = "MS_{}".format(len(all_ms) + 1)
+                # actor_name = "MS_{}".format(len(all_ms) + 1)
+                actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
                 parameters = [1.0, 1.0, 1]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
                                                          incoming_actors=["LoadBalancer"], outgoing_actors=[], server=self.get_best_server())
