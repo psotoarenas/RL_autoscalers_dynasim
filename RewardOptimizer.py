@@ -4,6 +4,7 @@ import x_pb2
 import random
 from MicroserviceDataClass import MicroserviceDataClass
 import TimeManagment
+import shortuuid
 
 
 class RewardOptimizer:
@@ -11,6 +12,7 @@ class RewardOptimizer:
         self.number_of_ms = 0
         self.timemanager = timemanager
         self.list_ms = []
+        self.counter = 0 # to determine the number to give to a new MS
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.0, "MS_4": 0.0, "MS_5": 0.0}
         self.oldlatency = 0.0
         with open('PIcontroller.csv') as f:
@@ -44,6 +46,8 @@ class RewardOptimizer:
         active_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'RUNNING']
         booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
         all_ms = [x for x in self.list_ms if 'MS' in x.name]
+
+        if self.counter == 0: self.counter = len(active_ms)
 
         if len(active_ms) > 0:
             cpu_usage = 0
@@ -85,7 +89,10 @@ class RewardOptimizer:
                 messages_to_send.append(delete_actor)
 
             elif delta > 1.0 and len(booting_ms) == 0:
-                actor_name = "MS_{}".format(len(all_ms) + 1)
+                #self.counter += 1
+                #actor_name = "MS_{}".format(self.counter)
+                #actor_name = "MS_{}".format(len(all_ms) + 1)
+                actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
                 parameters = [1.0, 1.0, 2]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice',
                                                          parameters=parameters,
