@@ -17,7 +17,7 @@ import numpy as np
 
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
-parser.add_argument('--timesteps_eval', default=500, type=int, help='Number of interactions for evaluating agent')
+parser.add_argument('--timesteps_eval', default=10000, type=int, help='Number of interactions for evaluating agent')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=1, type=int, help='How many ticks a report is generated')
@@ -62,9 +62,14 @@ agent = DQN(MlpPolicy, env, verbose=1, tensorboard_log="./dynasim_agent_tensorbo
 base_logger.info(f"Mode: training for {timesteps_train} timesteps")
 start = time.time()
 
-# inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
-# save to memory buffer and repeat for the number of timesteps.
-agent.learn(total_timesteps=timesteps_train)
+# the training is now per episodes. episodes = timesteps_train / 10000 (base)
+# if the simulation is not restarted, the agent is able to see the pattern of 10k timesteps the number of episodes
+episodes = int(float(timesteps_train))
+
+for episode in range(episodes):
+    # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
+    # save to memory buffer and repeat for the number of timesteps.
+    agent.learn(total_timesteps=10000)
 
 end = time.time()
 

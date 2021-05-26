@@ -22,7 +22,7 @@ class CommunicationRO:
     def handle_message(self, message: x_pb2.ToPythonMessage):
         self.timemanager.updateTime(message.tick_offset)
         if message.HasField("info"):
-            self._communicator.set_push_socket(message.info.ipaddress)
+            self._communicator.set_push_socket('146.175.219.201')
             self.timemanager.initializeTime(message.info.tick_length)
 
         if message.HasField("register_communicator"):

@@ -9,6 +9,7 @@ import threading
 import os
 import signal
 import time
+import shlex
 
 
 class DynaSim:
@@ -55,7 +56,8 @@ class DynaSim:
         # handle an incoming message
         self.timemanager.updateTime(message.tick_offset)
         if message.HasField("info"):
-            self._communicator.set_push_socket(message.info.ipaddress)
+            # todo: check how the fixed ip can be skipped.
+            self._communicator.set_push_socket('146.175.219.201')
             self.timemanager.initializeTime(message.info.tick_length)
 
         if message.HasField("register_communicator"):
@@ -240,20 +242,30 @@ class DynaSim:
         # The os.setsid fn attach a session id to all child subprocesses created by the simulation (erlang, wooper)
         # You can play with ticks_per_second and report_ticks,
         # if you want a report every second report_ticks = ticks_per_second
-        cmd = 'make -s dynasim_run CMD_LINE_OPT="--batch --ip {} --length {} --ticks_per_second {} --report_ticks {}"'.format(ip, sim_length, tick_freq, report_ticks)
-        self.process = subprocess.Popen(cmd,
-                                        stdout=subprocess.DEVNULL,
-                                        shell=True,
-                                        cwd=cwd,
-                                        preexec_fn=os.setsid)
+        cmd = 'docker run -it --hostname docker-desktop.localdomain -p 5556:5556 -p 5557:5557 -e LENGTH=100000 -e tickspersecond=1 -e IP_PYTHON=146.175.219.154 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:selection_RO_or_RA_RO'
+        args = shlex.split(cmd)
+        print(args)
+        self.process = subprocess.run(args)
+        print(self.process)
 
-        # TODO: what if the agent and the simulator are running in different machines?
+        # TODO: the command runs in the machine where docker is install, but agent and  simulator are running
+        #  in different machines. How to avoid this?
 
     def stop_simulation(self):
         if self.process:
-            # Send the SIGKILL signal to all the subprocesses with a given session id
-            print(f"Killing process: {self.process.pid}")
-            os.killpg(os.getpgid(self.process.pid), signal.SIGKILL)
+            # stop the docker container todo: check if the command works
+            cmd = 'docker stop dynasim -t 5'
+            args = shlex.split(cmd)
+            print(args)
+            process = subprocess.run(args)
+            print(process)
+            time.sleep(20)
             self.first_observation = False
             self.tick = 0
-            time.sleep(10)
+            cmd = 'docker rm dynasim'
+            args = shlex.split(cmd)
+            print(args)
+            process = subprocess.run(args)
+            print(process)
+            time.sleep(5)
+
