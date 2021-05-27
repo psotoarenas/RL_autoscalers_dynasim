@@ -4,27 +4,26 @@ import x_pb2
 import random
 from base_logger import logger
 import base_logger
-from MicroserviceDataClass import MicroserviceDataClass
+from ActorDataClass import MicroserviceDataClass, ServerDataClass
 import TimeManagment
 import numpy as np
 import shortuuid
 
+# ParameterMessages = self.create_parameter_message([self.cpu])
+# toSimMessage = x_pb2.ToSimulationMessage()
+# update_weight = x_pb2.UpdateParameterActor()
+# update_weight.type = "microservice"
+# update_weight.name = "MS_1"
+# update_weight.parameter_name = "current_thread_limit"
+# update_weight.parameters.extend(ParameterMessages)
+# toSimMessage.update_parameter_actor.CopyFrom(update_weight)
+# messages_to_send.append(toSimMessage)
+
 class RewardOptimizer:
     def __init__(self, timemanager):
-        self.number_of_ms = 0
-        self.number_of_servers = 0
         self.timemanager = timemanager
-        self.total_cpu_server = 0.0
-        self.total_cpu_usage = 0.0
-        self.total_overflow = 0.0
-        self.weight_per_ms = {}
-        self.ms_removed = []
-        self.ms_started = []
-        self.server_started = []
-        self.server_removed = []
         self.loadbalancer = "LoadBalancer"
         self.test_ms = {"MS_1": 0.5, "MS_2": 0.5, "MS_3": 0.1, "MS_4": 0.1, "MS_5": 0.1}
-        self.server_dict = {}
         #RA Parameters
         self.distribution_rate = 'uniform'
         self.distribution_execution_time = 'uniform'
@@ -39,6 +38,7 @@ class RewardOptimizer:
 
         self.tick_increase = 2
         self.list_ms = []
+        self.list_server = []
 
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
         base_logger.timemanager = self.timemanager
@@ -156,7 +156,26 @@ class RewardOptimizer:
 
         active_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'RUNNING']
         booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
-        all_ms = [x for x in self.list_ms if 'MS' in x.name]
+        # all_ms = [x for x in self.list_ms if 'MS' in x.name]
+
+        if self.timemanager.getCurrentSimulationTick() == 95:
+            for ms in active_ms:
+                if ms.server == 'Server_fswfrgAq':
+                    ParameterMessages = self.create_parameter_message([ms.name, 'Server_fY8jPeAq'])
+                    toSimMessage = x_pb2.ToSimulationMessage()
+                    migrate_service = x_pb2.UpdateParameterActor()
+                    migrate_service.type = "server"
+                    migrate_service.name = "Server_fswfrgAq"
+                    migrate_service.parameter_name = "migrate_service"
+                    migrate_service.parameters.extend(ParameterMessages)
+                    toSimMessage.update_parameter_actor.CopyFrom(migrate_service)
+                    messages_to_send.append(toSimMessage)
+
+        if self.timemanager.getCurrentSimulationTick() == 99:
+            delete_actor = self.remove_actor('Server_fswfrgAq', 'server')
+            print("Deleted: {}".format('Server_fswfrgAq'))
+            messages_to_send.append(delete_actor)
+
 
         if len(active_ms) > 0:
             cpu_usage = 0
@@ -176,6 +195,7 @@ class RewardOptimizer:
                 delete_actor = self.remove_actor(ms_to_delete.name, 'microservice')
                 print("Deleted: {}".format(ms_to_delete.name))
                 messages_to_send.append(delete_actor)
+
             elif cpu_usage > 0.8 and len(booting_ms) == 0:
                 # actor_name = "MS_{}".format(len(all_ms) + 1)
                 actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
@@ -186,6 +206,48 @@ class RewardOptimizer:
                 base_logger.info("New MS: {}".format(actor_name))
                 messages_to_send.append(new_actor)
 
+        for server in self.list_server:
+            print('Name: {}, CPU: {:.2f}, Status: {}, MS: {}'.format(server.name, server.cpu_usage, server.state, [ms for ms in server.ms_list]))
+
+        for server in self.list_server:
+            if server.state == 'SHUTDOWN':
+                self.list_server.remove(server)
+
+        if len(self.list_server) > 0:
+            cpu_usage = 0
+
+            for server in self.list_server:
+                cpu_usage += server.cpu_usage
+
+            cpu_usage = cpu_usage / len(self.list_server)
+            # base_logger.info("Servers: {}".format(self.number_of_servers))
+            # base_logger.info("Cpu Usage server: {:.2f}".format(cpu_usage))
+            # base_logger.info("Overflow: {:.2f}".format(overflow))
+
+            # if cpu_usage < 0.1 and self.number_of_ms > 1:
+            #     ms_name, _ = self.weight_per_ms.popitem()
+            #     self.ms_removed.append(ms_name)
+            #     delete_actor = self.remove_actor(ms_name, 'microservice')
+            #     # print(delete_actor)
+            #     # messages_to_send.append(delete_actor)
+
+            if cpu_usage > 0.8:
+                actor_name = "Server_{}".format(shortuuid.ShortUUID().random(length=8))
+                parameters = [300, 10, 16000]
+
+                ParameterMessages = self.create_parameter_message(parameters)
+                toSimMessage = x_pb2.ToSimulationMessage()
+                create_actor = x_pb2.CreateActor()
+                message = x_pb2.CreateGenericActor()
+                message.actor_type = 'class_Server'
+                message.name = actor_name
+                message.parameters.extend(ParameterMessages)
+                create_actor.generic_actor.CopyFrom(message)
+                toSimMessage.create_actor.CopyFrom(create_actor)
+
+                # print(new_actor)
+                messages_to_send.append(toSimMessage)
+                print("Create new Server: {}".format(actor_name))
         return messages_to_send
 
     def weight_test(self):
@@ -263,62 +325,55 @@ class RewardOptimizer:
         return toSimMessage
 
     def get_best_server(self):
-        cpu_max = 100
+        cpu_max = 1
         server_to_select = ''
-        for server, cpu in self.server_dict.items():
-            if cpu < cpu_max:
-                server_to_select = server
-                cpu_max = cpu
+        for server in self.list_server:
+            if server.cpu_usage < cpu_max and server.state == 'RUNNING':
+                server_to_select = server.name
+                cpu_max = server.cpu_usage
         return server_to_select
 
     def add_counter(self, counter):
-        new_ms = None
-        if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
-            new_ms = MicroserviceDataClass(counter.actor_name)
-            self.list_ms.append(new_ms)
-        else:
-            new_ms = [x for x in self.list_ms if x.name == counter.actor_name][0]
+        if "MS_" in counter.actor_name:
+            if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
+                new_ms = MicroserviceDataClass(counter.actor_name)
+                self.list_ms.append(new_ms)
+            else:
+                new_ms = [x for x in self.list_ms if x.name == counter.actor_name][0]
 
-        if counter.metric == 'cpu_usage':
-            new_ms.cpu_usage = counter.value
-        if counter.metric == 'overflow':
-            new_ms.overflow = counter.value
-        if counter.metric == 'status':
-            new_ms.state = counter.value
-        if counter.metric == 'service_list':
-            ms_server = counter.value.split(',')
-            for ms_name in ms_server:
-                if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
-                    ms = MicroserviceDataClass(ms_name)
-                    self.list_ms.append(new_ms)
+            if counter.metric == 'cpu_usage':
+                new_ms.cpu_usage = counter.value
+            if counter.metric == 'overflow':
+                new_ms.overflow = counter.value
+            if counter.metric == 'status':
+                new_ms.state = counter.value
+
+        if 'Server_' in counter.actor_name:
+            if not contains(self.list_server, lambda x: x.name == counter.actor_name):
+                new_server = ServerDataClass(counter.actor_name)
+                self.list_server.append(new_server)
+            else:
+                new_server = [x for x in self.list_server if x.name == counter.actor_name][0]
+
+            if counter.metric == 'cpu_usage':
+                new_server.cpu_usage = counter.value
+            if counter.metric == 'server_info':
+                print(counter.value)
+            if counter.metric == 'status':
+                new_server.state = counter.value
+            if counter.metric == 'service_list':
+                if counter.value != '':
+                    ms_server = counter.value.split(',')
+                    new_server.ms_list = ms_server
+                    for ms_name in ms_server:
+                        if not contains(self.list_ms, lambda x: x.name == ms_name):
+                            ms = MicroserviceDataClass(ms_name)
+                            self.list_ms.append(ms)
+                        else:
+                            ms = [x for x in self.list_ms if x.name == ms_name][0]
+                        ms.server = counter.actor_name
                 else:
-                    ms = [x for x in self.list_ms if x.name == ms_name][0]
-                ms.server = counter.actor_name
-
-        if counter.actor_name in self.ms_removed:
-            return
-        
-        if counter.actor_name in self.ms_started:
-            self.ms_started.remove(counter.actor_name)
-
-        if counter.actor_name in self.server_started:
-            self.server_started.remove(counter.actor_name)
-
-        if counter.actor_name not in self.weight_per_ms and "MS" in counter.actor_name:
-            self.weight_per_ms[counter.actor_name] = 0.5
-            print(self.weight_per_ms)
-
-        if counter.metric == 'cpu_usage' and "MS" in counter.actor_name:
-            self.number_of_ms += 1
-            self.total_cpu_usage += counter.value
-        elif counter.metric == 'cpu_usage' and "Server" in counter.actor_name:
-            self.server_dict.update({counter.actor_name: counter.value})
-            self.number_of_servers += 1
-            self.total_cpu_server += counter.value
-        elif counter.metric == 'overflow':
-            self.total_overflow += counter.value
-
-
+                    new_server.ms_list = []
 
     def create_parameter_message(self, parameters):
         list_parameter_messages = []
