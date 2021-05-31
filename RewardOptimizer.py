@@ -77,7 +77,7 @@ class RewardOptimizer:
                 actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
                 parameters = [1.0, 1.0, 1]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
-                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[], server=self.get_best_server())
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[], server="Server_1")
                 # print(new_actor)
                 base_logger.info("New MS: {}".format(actor_name))
                 self.ms_started.append(actor_name)
@@ -158,23 +158,23 @@ class RewardOptimizer:
         booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
         # all_ms = [x for x in self.list_ms if 'MS' in x.name]
 
-        if self.timemanager.getCurrentSimulationTick() == 95:
-            for ms in active_ms:
-                if ms.server == 'Server_fswfrgAq':
-                    ParameterMessages = self.create_parameter_message([ms.name, 'Server_fY8jPeAq'])
-                    toSimMessage = x_pb2.ToSimulationMessage()
-                    migrate_service = x_pb2.UpdateParameterActor()
-                    migrate_service.type = "server"
-                    migrate_service.name = "Server_fswfrgAq"
-                    migrate_service.parameter_name = "migrate_service"
-                    migrate_service.parameters.extend(ParameterMessages)
-                    toSimMessage.update_parameter_actor.CopyFrom(migrate_service)
-                    messages_to_send.append(toSimMessage)
-
-        if self.timemanager.getCurrentSimulationTick() == 99:
-            delete_actor = self.remove_actor('Server_fswfrgAq', 'server')
-            print("Deleted: {}".format('Server_fswfrgAq'))
-            messages_to_send.append(delete_actor)
+        # if self.timemanager.getCurrentSimulationTick() == 95:
+        #     for ms in active_ms:
+        #         if ms.server == 'Server_fswfrgAq':
+        #             ParameterMessages = self.create_parameter_message([ms.name, 'Server_fY8jPeAq'])
+        #             toSimMessage = x_pb2.ToSimulationMessage()
+        #             migrate_service = x_pb2.UpdateParameterActor()
+        #             migrate_service.type = "server"
+        #             migrate_service.name = "Server_fswfrgAq"
+        #             migrate_service.parameter_name = "migrate_service"
+        #             migrate_service.parameters.extend(ParameterMessages)
+        #             toSimMessage.update_parameter_actor.CopyFrom(migrate_service)
+        #             messages_to_send.append(toSimMessage)
+        #
+        # if self.timemanager.getCurrentSimulationTick() == 99:
+        #     delete_actor = self.remove_actor('Server_fswfrgAq', 'server')
+        #     print("Deleted: {}".format('Server_fswfrgAq'))
+        #     messages_to_send.append(delete_actor)
 
 
         if len(active_ms) > 0:
@@ -201,7 +201,7 @@ class RewardOptimizer:
                 actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
                 parameters = [1.0, 1.0, 1]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
-                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[], server=self.get_best_server())
+                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[], server="Server_1")
                 # print(new_actor)
                 base_logger.info("New MS: {}".format(actor_name))
                 messages_to_send.append(new_actor)
