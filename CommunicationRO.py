@@ -3,6 +3,10 @@ import x_pb2
 from Communicator import Communicator
 from TimeManagment import TimeManagement
 from RewardOptimizer import RewardOptimizer
+from RO_VerticalScaling import RO_VerticalScaling
+from RO_HorizontalScaling import RO_HorizontalScaling
+from RO_ServerMigration import RO_ServerMigration
+from RO_LoadbalancerWeights import RO_LoadbalancerWeight
 import subprocess
 
 class CommunicationRO:
@@ -12,7 +16,7 @@ class CommunicationRO:
         self.timemanager = TimeManagement()
 
         self.ro_pid = ''
-        self.ro_agent = RewardOptimizer(self.timemanager)
+        self.ro_agent = RO_LoadbalancerWeight(self.timemanager)
         self.ro_agent.run()
 
     def run(self):
