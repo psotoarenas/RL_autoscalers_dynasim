@@ -63,7 +63,7 @@ message CreateMicroservice {
 message CreateGenericActor {
     string actor_type = 1;
     string name = 2;
-    string server_name = 3;
+    string server_name = 3; //to be deleted
     repeated Parameter parameters = 4;
 }
 
@@ -77,7 +77,7 @@ message CreateActor {
 message RemoveActor {
     string type = 1;
     string name = 2;
-    string pid = 3;
+    string pid = 3; //to be deleted
 }
 
 message UpdateParameterActor {
