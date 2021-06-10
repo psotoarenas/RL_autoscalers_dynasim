@@ -75,3 +75,67 @@ The command of the docker  to test this examples:
 The command of the docker  to test this examples:
 - `docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
 `
+  
+### Server Migration (_RO_ServerMigration.py_)
+
+- Make sure that in the CommunicationRO.py file the handle_message function has both float and string counters (line 35-40).
+- This example displays the server migration of a MS
+
+- This example is tested with the 'server_migration' docker image of the simulator
+- To use this example, change line 16 of CommunicationRO.py to `self.ro_agent = RO_ServerMigration(self.timemanager)`
+
+#### EXAMPLE
+- Sometimes it is needed to move a MS from one server to another server.
+- For example: when two or more MS communicate constantly, they can be better placed on one server,
+- Or, when scaling down in MS, the MS on two servers can be combined on one server to shutdown a server
+
+
+- To migrate a MS, a UpdateParameterActor message is sent to the simulator with reciptient the server running the MS and parameter migrate_service
+- The parameters are: the MS name and the server name where the MS should migrate to.
+- For now the MS keeps it jobs and is directly migrated to the new server
+
+
+#### SCENARIO
+- A second server is created at tick 5.
+- Every 10 ticks the traffic increased so a new MS must be created (no vertical scaling) to handle the traffic
+- The new MS is automatically placed on Server_1 (the first server)
+- At tick 95 all the active MS (state = RUNNING) are migrated to the new server created at tick 5.
+- after this you will see in the prints that the MS are migrated to the new server
+- The new MS after 95 will still be placed on Server_1 and the loadbalancer will also stay at Server_1
+
+#### The command of the docker  to test this examples:
+` docker run -it --rm --network host -e LENGTH=120 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
+`
+
+### Loadbalancer Weight-based Algorithm (_RO_LoadbalancerWeight.py_)
+
+- Make sure that in the CommunicationRO.py file the handle_message function has both float and string counters (line 35-40).
+- This example displays the server migration of a MS
+
+This example is tested with the 'server_migration' docker image of the simulator.
+ To use this example, change line 16 of CommunicationRO.py to self.ro_agent = RO_LoadbalancerWeight(self.timemanager)
+
+#### EXAMPLE
+- Depending on certian parameters and environments, it is not preferable for the loadbalancer to equally dividing the traffic between the MS
+- For example: different servers can result in different processing speeds and thus different jobs per second for each MS
+- Or: when a new MS is started, the current MS have a higher load and maybe some overflow, the new MS can handle more traffic at the beginning to restore the load in the current MS faster
+
+
+- To change the weight of a MS, a UpdateParameterActor message is sent to the simulator with reciptient the loadbalancer and parameter weight.
+- The parameters are: the MS name and the new weight for this MS. For each MS a new message is sent, but these messages are automatically bundled in one big message by Communicator.
+
+The loadbalancer adds all the weights and normalize them. Then, it will divide them between MS depending on the normalized weight.
+
+For this we need to set the algorithm of the loadbalancer in the Docker environment via: `-e loadbalancer_algorithm={weighted|equal}`,
+(default is equal, so for this the environment must not be set.)
+
+#### SCENARIO
+- At tick 1, 8 new MS are started to have a total MS of 10
+- We generate each tick the same traffic load
+- With an equal load (until tick 5) the load is divide equally between the MS, which results in a load per MS of 0.52
+- Every 10 ticks we change the weight randomly for each MS, starting at tick 10.
+- After 2 ticks, you will see the result in the loads of the MS which is different for each MS depending on the load.
+
+The command of the docker  to test this examples:
+`docker run -it --rm --network host -e LENGTH=120 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 -e loadbalancer_algorithm=weighted gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
+`
