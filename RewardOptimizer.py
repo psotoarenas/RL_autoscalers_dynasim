@@ -9,15 +9,6 @@ import TimeManagment
 import numpy as np
 import shortuuid
 
-# ParameterMessages = self.create_parameter_message([self.cpu])
-# toSimMessage = x_pb2.ToSimulationMessage()
-# update_weight = x_pb2.UpdateParameterActor()
-# update_weight.type = "microservice"
-# update_weight.name = "MS_1"
-# update_weight.parameter_name = "current_thread_limit"
-# update_weight.parameters.extend(ParameterMessages)
-# toSimMessage.update_parameter_actor.CopyFrom(update_weight)
-# messages_to_send.append(toSimMessage)
 
 class RewardOptimizer:
     def __init__(self, timemanager):
@@ -48,98 +39,6 @@ class RewardOptimizer:
         messages_ra = self.getUpdateRA()
         return messages_ra + messages_ro
 
-    def load_algorithm(self):
-        #must be defined here
-        messages_to_send = []
-        self.ms_removed = []
-
-        for ms in self.list_ms:
-            print('Name: {}, CPU: {:.2f}, Overflow: {}, Status: {}, Server: {}'.format(ms.name, ms.cpu_usage, ms.overflow, ms.state, ms.server))
-
-        if self.number_of_ms > 0:
-            cpu_usage = self.total_cpu_usage / self.number_of_ms
-            overflow = self.total_overflow / self.number_of_ms
-            base_logger.info("MS: {} ({})".format(self.number_of_ms, self.timemanager.getCurrentSimulationTick()))
-            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
-            # base_logger.info("Overflow: {:.2f}".format(overflow))
-
-            if cpu_usage < 0.4 and self.number_of_ms > 1:
-                ms_name, _ = self.weight_per_ms.popitem()
-                self.ms_removed.append(ms_name)
-                delete_actor = self.remove_actor(ms_name, 'microservice')
-                print("Deleted: {}".format(ms_name))
-                messages_to_send.append(delete_actor)
-
-            elif cpu_usage > 0.8 and len(self.ms_started) == 0:
-                # actor_name = "MS_{}".format(len(self.weight_per_ms.keys()) + 1)
-                actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
-                parameters = [1.0, 1.0, 1]
-                new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
-                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[], server="Server_1")
-                # print(new_actor)
-                base_logger.info("New MS: {}".format(actor_name))
-                self.ms_started.append(actor_name)
-                messages_to_send.append(new_actor)
-
-            # ParameterMessages = self.create_parameter_message([self.cpu])
-            # toSimMessage = x_pb2.ToSimulationMessage()
-            # update_weight = x_pb2.UpdateParameterActor()
-            # update_weight.type = "microservice"
-            # update_weight.name = "MS_1"
-            # update_weight.parameter_name = "current_thread_limit"
-            # update_weight.parameters.extend(ParameterMessages)
-            # toSimMessage.update_parameter_actor.CopyFrom(update_weight)
-            # messages_to_send.append(toSimMessage)
-
-            self.number_of_ms = 0
-            self.total_cpu_usage = 0.0
-            self.total_overflow = 0.0
-
-        if self.number_of_servers > 0:
-            cpu_usage = self.total_cpu_server / self.number_of_servers
-            # base_logger.info("Cpu Usage server: {:.2f}".format(cpu_usage))
-            # base_logger.info("Overflow: {:.2f}".format(overflow))
-
-            if cpu_usage < 0.1 and self.number_of_ms > 1:
-                ms_name, _ = self.weight_per_ms.popitem()
-                self.ms_removed.append(ms_name)
-                delete_actor = self.remove_actor(ms_name, 'microservice')
-                # print(delete_actor)
-                #messages_to_send.append(delete_actor)
-
-            elif cpu_usage > 0.9 and len(self.server_started) == 0:
-                actor_name = "Server_{}".format(len(self.server_dict) + 1)
-                parameters = [300, 40, 16000]
-
-                ParameterMessages = self.create_parameter_message(parameters)
-                toSimMessage = x_pb2.ToSimulationMessage()
-                create_actor = x_pb2.CreateActor()
-                message = x_pb2.CreateGenericActor()
-                message.actor_type = 'class_Server'
-                message.name = actor_name
-                message.parameters.extend(ParameterMessages)
-                create_actor.generic_actor.CopyFrom(message)
-                toSimMessage.create_actor.CopyFrom(create_actor)
-
-                # print(new_actor)
-                self.server_started.append(actor_name)
-                messages_to_send.append(toSimMessage)
-                print("Create new Server: {}".format(actor_name))
-            # ParameterMessages = self.create_parameter_message([self.cpu])
-            # toSimMessage = x_pb2.ToSimulationMessage()
-            # update_weight = x_pb2.UpdateParameterActor()
-            # update_weight.type = "microservice"
-            # update_weight.name = "MS_1"
-            # update_weight.parameter_name = "current_thread_limit"
-            # update_weight.parameters.extend(ParameterMessages)
-            # toSimMessage.update_parameter_actor.CopyFrom(update_weight)
-            # messages_to_send.append(toSimMessage)
-
-            self.number_of_servers = 0
-            self.total_cpu_server = 0.0
-
-        return messages_to_send
-
     def load_algorithm_test(self):
         messages_to_send = []
 
@@ -154,25 +53,6 @@ class RewardOptimizer:
         active_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'RUNNING']
         booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
         # all_ms = [x for x in self.list_ms if 'MS' in x.name]
-
-        # if self.timemanager.getCurrentSimulationTick() == 95:
-        #     for ms in active_ms:
-        #         if ms.server == 'Server_fswfrgAq':
-        #             ParameterMessages = self.create_parameter_message([ms.name, 'Server_fY8jPeAq'])
-        #             toSimMessage = x_pb2.ToSimulationMessage()
-        #             migrate_service = x_pb2.UpdateParameterActor()
-        #             migrate_service.type = "server"
-        #             migrate_service.name = "Server_fswfrgAq"
-        #             migrate_service.parameter_name = "migrate_service"
-        #             migrate_service.parameters.extend(ParameterMessages)
-        #             toSimMessage.update_parameter_actor.CopyFrom(migrate_service)
-        #             messages_to_send.append(toSimMessage)
-        #
-        # if self.timemanager.getCurrentSimulationTick() == 99:
-        #     delete_actor = self.remove_actor('Server_fswfrgAq', 'server')
-        #     print("Deleted: {}".format('Server_fswfrgAq'))
-        #     messages_to_send.append(delete_actor)
-
 
         if len(active_ms) > 0:
             cpu_usage = 0
@@ -244,57 +124,6 @@ class RewardOptimizer:
                 # print(new_actor)
                 messages_to_send.append(toSimMessage)
                 print("Create new Server: {}".format(actor_name))
-        return messages_to_send
-
-    def weight_test(self):
-        random_ms = {}
-        messages_to_send = []
-        i = 1
-        for ms in range(5):
-            weight = round(max(0.1, float(random.randint(-10, 100))/100), 3)
-            name = 'MS_{}'.format(i)
-            i += 1
-            random_ms[name] = weight
-        print("Prev list: " + str(self.test_ms))
-        for (name, weight) in self.test_ms.items():
-            if weight == 0 and random_ms.get(name) != 0:
-                parameters = [300, 0]
-                new_actor = self.create_new_microservice(name, actor_type='class_SimpleMicroservice', parameters=parameters,
-                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[])
-                messages_to_send.append(new_actor)
-
-                ParameterMessages = self.create_parameter_message([name, weight])
-                toSimMessage = x_pb2.ToSimulationMessage()
-                update_weight = x_pb2.UpdateParameterActor()
-                update_weight.type = "microservice"
-                update_weight.name = "LoadBalancer"
-                update_weight.parameter_name = "weight"
-                update_weight.parameters.extend(ParameterMessages)
-                toSimMessage.update_parameter_actor.CopyFrom(update_weight)
-
-                messages_to_send.append(toSimMessage)
-
-                print("actor created")
-
-            elif weight != 0 and random_ms.get(name) == 0:
-                delete_actor = self.remove_actor(name, 'microservice')
-                messages_to_send.append(delete_actor)
-                print("actor deleted")
-
-            elif weight != 0 and random_ms.get(name) != 0:
-                ParameterMessages = self.create_parameter_message([name, weight])
-                toSimMessage = x_pb2.ToSimulationMessage()
-                update_weight = x_pb2.UpdateParameterActor()
-                update_weight.type = "microservice"
-                update_weight.name = "LoadBalancer"
-                update_weight.parameter_name = "weight"
-                update_weight.parameters.extend(ParameterMessages)
-                toSimMessage.update_parameter_actor.CopyFrom(update_weight)
-                messages_to_send.append(toSimMessage)
-
-        print("New list: " + str(random_ms), end='\n\n')
-
-        self.test_ms = random_ms
         return messages_to_send
 
     def create_new_microservice(self, name, actor_type, incoming_actors, outgoing_actors=[], parameters=[], server='Server_1'):

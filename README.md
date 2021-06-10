@@ -14,7 +14,58 @@
    
    `python3 CommunicationRO.py` <br>
    `python3 CommunicationRA.py` (when seperate RO and RA)
-   
+
+## Run the simulation via docker from python
+To start the simulator in Docker from python, use the following commands:
+
+1) Create Client:
+
+- Docker host same PC as python controller:
+  
+        import docker
+        client = docker.from_env()
+
+- Docker host another PC as python controller:
+          
+        import docker
+        client = docker.DockerClient(base_url='ssh://ydebock@143.129.83.93')
+    make sure that both PC have password-less ssh access to each other
+
+2) Start simulator in Docker container:
+
+- To run with network of the host system (preffered):
+
+        client.containers.run(
+            image='gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration',
+            environment={'LENGTH': 1200, 'tickspersecond': 1, 'IP_PYTHON': '143.129.83.94', 'separate_ra': 0},
+            network='host', 
+            auto_remove=True, 
+            detach=True, 
+            name='dynamicsim'
+        )
+- To run with bridge network:
+  
+        client.containers.run(
+            image='gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration',
+            environment={'LENGTH': 1200, 'tickspersecond': 1, 'IP_PYTHON': '143.129.83.94', 'separate_ra': 0},
+            hostname='docker-simulation.localdomain',
+            ports={'5556/tcp': 5556}
+            auto_remove=True, 
+            detach=True, 
+            name='dynamicsim'
+        )
+    In this case the simulation takes the ip address of the docker container, like 172.x.x.x. This is no problem when the
+python controller and docker container running on the same host machine. However when running both on another host machine,
+  the python must set the IP address of the machine running the docker container manually. To change this replace in _CommunicatorRO.py_:
+
+       self._communicator.set_push_socket(message.info.ipaddress)
+            
+    with
+  
+       self._communicator.set_push_socket(<<ip address docker machine>>)
+
+More information about the Docker SDK for python: https://docker-py.readthedocs.io/en/stable/
+
 ## Examples
 ### Vertical Scaling (_RO_VerticalScaling.py_)
 
