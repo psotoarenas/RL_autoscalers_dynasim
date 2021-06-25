@@ -7,6 +7,7 @@ import argparse
 import matplotlib.pyplot as plt
 import os
 import signal
+import docker
 import sys
 import base_logger
 import numpy as np
@@ -124,10 +125,12 @@ mean_100ep_reward = round(np.mean(episode_rewards[-100:]), 1)
 print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
 
 # kill simulation before you leave
-pid_sim = info[0]["pid_simulation"]
-print(f"Killing process: {pid_sim}")
-os.killpg(os.getpgid(pid_sim), signal.SIGKILL)
-time.sleep(5)
+container_id = info[0]["container_id"]
+client = docker.from_env()
+container = client.containers.get(container_id)
+print(f"Killing container: {container_id}")
+container.stop()  # default time for stopping: 10 secs
+# time.sleep(20)
 
 
 ########################################################################################################################

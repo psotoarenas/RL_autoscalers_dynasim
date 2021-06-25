@@ -128,9 +128,9 @@ class DynaSimEnv(gym.Env):
         # reward = -(obs[1] / self.target) - (self.alpha * obs[3] * math.exp(- self.beta * obs[0] * obs[2]))
 
         self.acc_reward += reward
-        base_logger.info(f"Reward: {reward}")
-        base_logger.info(f"Target: {self.target}")
-        base_logger.info(f"Cum Reward: {self.acc_reward}")
+        # base_logger.info(f"Reward: {reward}")
+        # base_logger.info(f"Target: {self.target}")
+        # base_logger.info(f"Cum Reward: {self.acc_reward}")
 
         # if the agent creates more than 100 MSs or the overflow is greater than 500.,
         # end episode and reset simulation
@@ -142,7 +142,7 @@ class DynaSimEnv(gym.Env):
 
         return obs, reward, done, {'num_ms': self.dynasim.number_of_ms,
                                    'action': action,
-                                   'pid_simulation': self.dynasim.process.pid}
+                                   'container_id': self.dynasim.container.id}
 
     def _next_observation(self):
         # observe the simulation status = (cpu, latency, overflow, num_ms)
@@ -161,12 +161,20 @@ class DynaSimEnv(gym.Env):
         self.dynasim.send_messages(messages)
 
     def reset(self):
-        # stop any previous simulation
-        self.dynasim.stop_simulation()
+        # # stop any previous simulation
+        # self.dynasim.stop_simulation()
+        #
+        # # start the simulation
+        # self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
+        #                               report_ticks=self.report)
 
-        # start the simulation
-        self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
-                                      report_ticks=self.report)
+        existing_container = self.dynasim.stop_simulation()
+
+        if not existing_container:
+            # start the simulation
+            self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
+                                          report_ticks=self.report)
+
 
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:

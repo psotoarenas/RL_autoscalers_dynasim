@@ -4,3 +4,4 @@ numpy~=1.19
 tensorflow==1.15.0
 stable-baselines
 gym
+docker

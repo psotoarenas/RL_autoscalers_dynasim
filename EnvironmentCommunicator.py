@@ -6,8 +6,7 @@ from TimeManagment import TimeManagement
 from Communicator import Communicator
 import subprocess
 import threading
-import os
-import signal
+import docker
 import time
 import shlex
 
@@ -21,7 +20,7 @@ class DynaSim:
         self.ro_pid = ""
         self.report_ready = threading.Event()
         self.first_observation = False
-        self.process = ""
+        self.container = ""
 
         # From MS handling
         self.number_of_ms = 0
@@ -238,34 +237,60 @@ class DynaSim:
         :param cwd: directory from which the make command will run
         :return:
         """
-        # if using shell=True in the Popen subprocess, the command should be as single string and not list
-        # The os.setsid fn attach a session id to all child subprocesses created by the simulation (erlang, wooper)
         # You can play with ticks_per_second and report_ticks,
         # if you want a report every second report_ticks = ticks_per_second
-        cmd = 'docker run -it --hostname docker-desktop.localdomain -p 5556:5556 -p 5557:5557 -e LENGTH=100000 -e tickspersecond=1 -e IP_PYTHON=146.175.219.154 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:selection_RO_or_RA_RO'
-        args = shlex.split(cmd)
-        print(args)
-        self.process = subprocess.run(args)
-        print(self.process)
 
-        # TODO: the command runs in the machine where docker is install, but agent and  simulator are running
+        # Docker container runs with command:
+        # docker run -it --rm -p 5556:5556 -h docker-simulation.localdomain -e LENGTH=sim_length -e tickspersecond=tick_freq -e IP_PYTHON=ip -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:selection_RO_or_RA_RO
+
+        print("Starting simulation")
+        environment = ["LENGTH={}".format(sim_length),
+                       "tickspersecond={}".format(tick_freq),
+                       "IP_PYTHON={}".format(ip),
+                       "reportticks={}".format(report_ticks),
+                       "separate_ra=0"]
+        # todo: ask yorick how do we input the report ticks?
+        client_local = docker.from_env()   # connects to docker daemon
+        client_remote = docker.DockerClient(base_url='ssh://darpa@146.175.219.201', use_ssh_client=False)
+
+        self.container = client_remote.containers.run("gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:selection_RO_or_RA_RO",
+                                               stdin_open=True, tty=True, auto_remove=False, detach=True,
+                                               hostname="docker-simulation.localdomain",
+                                               ports={'5556/tcp': 5556}, name="dynasim", environment=environment
+                                               )  # if detach=True, the command returns a container object
+
+        # TODO: the command runs in the machine where docker is install, but agent and simulator are running
         #  in different machines. How to avoid this?
 
     def stop_simulation(self):
-        if self.process:
+        if self.container:
             # stop the docker container todo: check if the command works
-            cmd = 'docker stop dynasim -t 5'
-            args = shlex.split(cmd)
-            print(args)
-            process = subprocess.run(args)
-            print(process)
-            time.sleep(20)
+            self.container.stop()  # default time for stopping: 10 secs
             self.first_observation = False
             self.tick = 0
-            cmd = 'docker rm dynasim'
-            args = shlex.split(cmd)
-            print(args)
-            process = subprocess.run(args)
-            print(process)
-            time.sleep(5)
+            # time.sleep(20)
+            existing_container = True
+            print("Container exist")
+        else:
+            existing_container = False
+            print("No container")
+
+        return existing_container
+
+    def restart_simulation(self):
+        print("Restarting simulation")
+        if self.container:
+            # restart the docker container todo: check if the command works
+            self.container.restart()  # default time for stopping: 10 secs
+            self.first_observation = False
+            self.tick = 0
+            # time.sleep(15)
+            existing_container = True
+            print("Container exist")
+        else:
+            existing_container = False
+            print("No container")
+
+        return existing_container
+
 
