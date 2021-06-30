@@ -21,7 +21,7 @@ parser.add_argument('--timesteps_train', default=10000, type=int, help='Number o
 parser.add_argument('--timesteps_eval', default=10000, type=int, help='Number of interactions for evaluating agent')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
-parser.add_argument('--report_ticks', default=1, type=int, help='How many ticks a report is generated')
+parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
 parser.add_argument('--agent_name', default='dqn_dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/test/',
@@ -33,6 +33,7 @@ args = parser.parse_args()
 # Train Agent during timesteps_train and simulation length in ticks terms
 ########################################################################################################################
 
+# todo: double check if this is still needed
 timesteps_train = args.timesteps_train
 sim_length = args.sim_length
 # simulation length should be longer than the number of timesteps to gracefully finish the process

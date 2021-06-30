@@ -75,8 +75,7 @@ class DynaSimEnv(gym.Env):
         # print(f"Step: {self.current_step}")
 
         meaning = act_2_meaning[action]
-        base_logger.info(f"Action: {action}")
-        # print(f"Action: {action}, {meaning}")
+        base_logger.info(f"Action: {action}, {meaning}")
 
         # take an action (according to a learned behavior)
         self._take_action(action)
@@ -136,7 +135,9 @@ class DynaSimEnv(gym.Env):
         # end episode and reset simulation
         done = False
         # server is limited to 53 MS
-        if obs[3] > 50 or obs[2] > 500.:
+        # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
+        if obs[3] > 50 or obs[2] > 500. or (obs[3] == 1 and action == self.DECREASE):
+        # if obs[3] > 50 or obs[2] > 500.:
             done = True
             reward = 10 * reward
 
@@ -168,7 +169,7 @@ class DynaSimEnv(gym.Env):
         # self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
         #                               report_ticks=self.report)
 
-        existing_container = self.dynasim.stop_simulation()
+        existing_container = self.dynasim.restart_simulation()
 
         if not existing_container:
             # start the simulation

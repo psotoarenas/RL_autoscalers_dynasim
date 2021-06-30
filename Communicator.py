@@ -1,4 +1,3 @@
-
 import zmq
 import x_pb2
 import socket
@@ -59,6 +58,9 @@ class Communicator:
 
         for c in self._to_notify:
             c(message)
+
+    def stop_listening(self):
+        self._keep_running = False
 
     def get_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
