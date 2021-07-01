@@ -1,5 +1,3 @@
-import math
-
 import gym
 from gym import spaces
 from EnvironmentCommunicator import DynaSim
@@ -28,7 +26,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, sim_dir, ticks, report):
+    def __init__(self, sim_length, ai_ip, ticks, report):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -55,7 +53,6 @@ class DynaSimEnv(gym.Env):
 
         # parameters to start simulation
         self.ip = ai_ip
-        self.sim_dir = sim_dir
         self.sim_length = sim_length
         self.ticks = ticks
         self.report = report
@@ -127,17 +124,15 @@ class DynaSimEnv(gym.Env):
         # reward = -(obs[1] / self.target) - (self.alpha * obs[3] * math.exp(- self.beta * obs[0] * obs[2]))
 
         self.acc_reward += reward
-        # base_logger.info(f"Reward: {reward}")
+        base_logger.info(f"Reward: {reward}")
         # base_logger.info(f"Target: {self.target}")
         # base_logger.info(f"Cum Reward: {self.acc_reward}")
 
-        # if the agent creates more than 100 MSs or the overflow is greater than 500.,
+        # if the agent creates more than 50 MSs (one server is limited to 53 MS) or the overflow is greater than 500.,
         # end episode and reset simulation
         done = False
-        # server is limited to 53 MS
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
-        if obs[3] > 50 or obs[2] > 500. or (obs[3] == 1 and action == self.DECREASE):
-        # if obs[3] > 50 or obs[2] > 500.:
+        if obs[3] > 50 or obs[2] > 500.:
             done = True
             reward = 10 * reward
 
@@ -162,26 +157,18 @@ class DynaSimEnv(gym.Env):
         self.dynasim.send_messages(messages)
 
     def reset(self):
-        # # stop any previous simulation
-        # self.dynasim.stop_simulation()
-        #
-        # # start the simulation
-        # self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
-        #                               report_ticks=self.report)
-
         existing_container = self.dynasim.restart_simulation()
 
         if not existing_container:
             # start the simulation
-            self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, cwd=self.sim_dir, tick_freq=self.ticks,
+            self.dynasim.start_simulation(sim_length=self.sim_length, ip=self.ip, tick_freq=self.ticks,
                                           report_ticks=self.report)
-
 
         # need to wait first_observation=True, that means the simulator is connected and waiting for messages.
         while not self.dynasim.first_observation:
             pass
 
-        print("Environment Reset")
+        base_logger.info("Environment Reset")
         self.current_step = 0
         return self._next_observation()
 
@@ -189,28 +176,3 @@ class DynaSimEnv(gym.Env):
         print(f'Step: {self.current_step}')
         print(f'Num_of_ms: {self.dynasim.number_of_ms}')
 
-if __name__ == "__main__":
-    # at least two ticks more are needed in the total simulation length: the first tick to make the first observation
-    # and the last tick to be able to finish the process properly
-    total_timesteps = 200
-    sim_length = 2000
-    if not (sim_length >= total_timesteps + 2):
-        sys.exit("Simulation ticks must be larger than the timesteps for training. "
-                 "At least sim_length = timesteps_train + 2")
-    # parameters to start simulation
-    ip = input("Specify the IP where the python scripts are running")
-    sim_dir = input("Specify the directory where the simulator runs")
-    # without vectorized environments
-    env = DynaSimEnv(sim_length=sim_length, ai_ip=ip, sim_dir=sim_dir, ticks=5, report=5)
-    # Random Actions from action space -> the same as agent.learn but without saving to memory (learning)
-    print(f"Action Space: {env.action_space}")
-    print(f"Observation Space: {env.observation_space}")
-    observation = env.reset()
-    for i in range(total_timesteps):
-        # take random action
-        action = env.action_space.sample()
-        observation, reward, done, info = env.step(action)
-    # the process needs to be killed so it does not remain active after ending the script
-    env.dynasim.stop_simulation()
-    print("End")
-    sys.exit()

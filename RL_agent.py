@@ -5,8 +5,6 @@ from Environment import DynaSimEnv
 import time
 import argparse
 import matplotlib.pyplot as plt
-import os
-import signal
 import docker
 import sys
 import base_logger
@@ -19,13 +17,12 @@ import numpy as np
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
 parser.add_argument('--timesteps_eval', default=10000, type=int, help='Number of interactions for evaluating agent')
+parser.add_argument('--timesteps_base', default=10000, type=int, help='Minimum number of timesteps in an episode')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
 parser.add_argument('--agent_name', default='dqn_dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
-parser.add_argument('--sim_dir', default='../dynamicsim/mock-simulators/dynaSim/test/',
-                    help='Directory where the command to start the simulation needs to run')
 
 args = parser.parse_args()
 
@@ -33,13 +30,22 @@ args = parser.parse_args()
 # Train Agent during timesteps_train and simulation length in ticks terms
 ########################################################################################################################
 
-# todo: double check if this is still needed
+# every incoming report is considered an interaction with the simulator. Therefore, the simulation length (in ticks)
+# should be set by the number of timesteps (interactions with the simulator) and the number of report ticks.
+# simulation length should be longer than the number of timesteps (train or evaluation) to gracefully finish the process
 timesteps_train = args.timesteps_train
+timesteps_eval = args.timesteps_eval
+
+# check which of the two timesteps is longer
+if timesteps_train > timesteps_eval:
+    time_steps = timesteps_train
+else:
+    time_steps = timesteps_eval
+
 sim_length = args.sim_length
-# simulation length should be longer than the number of timesteps to gracefully finish the process
-if not (sim_length >= (timesteps_train + 2) * args.ticks_per_second):
-    sys.exit("Simulation ticks must be larger than the timesteps for training. "
-             "At least sim_length = (timesteps_train + 2) * ticks_per_second")
+if not (sim_length >= (time_steps + 2) * args.report_ticks):
+    sys.exit("Simulation ticks must be larger than the timesteps for training or testing. "
+             "At least sim_length = (timesteps + 2) * report_ticks")
 # logger
 base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 
@@ -47,8 +53,8 @@ base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 # Vectorize Environment.
 ########################################################################################################################
 
-env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, sim_dir=args.sim_dir,
-                                      ticks=args.ticks_per_second, report=args.report_ticks)])
+env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second,
+                                      report=args.report_ticks)])
 
 ########################################################################################################################
 # Create Agent.
@@ -61,17 +67,22 @@ agent = DQN(MlpPolicy, env, verbose=1, tensorboard_log="./dynasim_agent_tensorbo
 # Train Agent.
 ########################################################################################################################
 
-base_logger.info(f"Mode: training for {timesteps_train} timesteps")
+timesteps_base = args.timesteps_base
+base_logger.info(f"Mode: training for {timesteps_train} timesteps with {timesteps_base} base")
 start = time.time()
 
-# the training is now per episodes. episodes = timesteps_train / 10000 (base)
-# if the simulation is not restarted, the agent is able to see the pattern of 10k timesteps the number of episodes
-episodes = int(float(timesteps_train))
+# the training is now per episodes. episodes = timesteps_train / timesteps_base
+# if the simulation is not restarted, the agent is able to see a pattern of timesteps_base the number of episodes
+episodes = int(float(timesteps_train)/float(timesteps_base))
+
+if episodes < 1:
+    sys.exit("The number of timesteps for training should be bigger than the timesteps_base")
 
 for episode in range(episodes):
+    base_logger.info(f"Episode: {episode}")
     # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
     # save to memory buffer and repeat for the number of timesteps.
-    agent.learn(total_timesteps=10000)
+    agent.learn(total_timesteps=timesteps_base)
 
 end = time.time()
 
@@ -87,34 +98,37 @@ agent.save(agent_name)
 print("Training procedure finished")
 
 ########################################################################################################################
-# Test the trained agent for timesteps_eval
+# Evaluate your Agent for timesteps_eval.
 ########################################################################################################################
 
-timesteps_evaluation = args.timesteps_eval
-
-########################################################################################################################
-# Evaluate your Agent.
-########################################################################################################################
-
+timesteps_eval = args.timesteps_eval
 timestep_rewards = [0.0]
 episode_rewards = [0.0]
-obs = env.reset()
-observations = []
+cpu_usage = []
+overflow = []
+latency = []
 num_ms = []
+actions = []
+rewards = []
 print(f"Agent {agent_name} will be evaluated")
-base_logger.info(f"Mode: testing for {timesteps_evaluation} timesteps")
+base_logger.info(f"Mode: testing for {timesteps_eval} timesteps")
 
-for i in range(timesteps_evaluation):
+obs = env.reset()
+for i in range(timesteps_eval):
     # _states are only useful when using LSTM policies
     action, _states = agent.predict(obs)
 
     obs, reward, done, info = env.step(action)
 
-    observations.append(obs[0, 0])
-    num_ms.append(info[0]["num_ms"])
+    cpu_usage.append(obs[0, 0])
+    latency.append(obs[0, 1])
+    overflow.append(obs[0, 2])
+    num_ms.append(obs[0, 3])
+    rewards.append(reward[0])
+    actions.append(info[0]["action"])
 
     # Stats
-    episode_rewards[-1] += reward
+    episode_rewards[-1] += reward[0]
     if done:
         obs = env.reset()
         episode_rewards.append(0.0)
@@ -139,10 +153,19 @@ container.stop()  # default time for stopping: 10 secs
 ########################################################################################################################
 
 print("Plotting results")
-plt.plot(observations)
-plt.ylabel('Observation')
-plt.xlabel('Timesteps')
-# plt.savefig('./cpu_usage.png', dpi=300)
+plt.plot(cpu_usage)
+plt.ylabel('CPU')
+plt.xlabel('Timesteps Evaluation')
+plt.show()
+
+plt.plot(overflow)
+plt.ylabel('Overflow')
+plt.xlabel('Timesteps Evaluation')
+plt.show()
+
+plt.plot(latency)
+plt.ylabel('Latency')
+plt.xlabel('Timesteps Evaluation')
 plt.show()
 
 plt.plot(num_ms)
@@ -151,3 +174,12 @@ plt.xlabel('Timesteps')
 # plt.savefig('./num_ms.png', dpi=300)
 plt.show()
 
+plt.plot(actions, "o")
+plt.ylabel('Actions')
+plt.xlabel('Timesteps Evaluation')
+plt.show()
+
+plt.plot(rewards)
+plt.ylabel('Reward Agent')
+plt.xlabel('Timesteps Evaluation')
+plt.show()

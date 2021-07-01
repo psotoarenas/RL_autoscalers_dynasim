@@ -8,7 +8,6 @@ from ActorDataClass import MicroserviceDataClass, ServerDataClass
 import threading
 import docker
 import shortuuid
-import time
 
 
 class DynaSim:
@@ -141,11 +140,11 @@ class DynaSim:
     def communicate_counters(self):
         # communicate counters (from simulator to environment)
         # print for debugging
-        for ms in self.list_ms:
-            print('Name: {}, CPU: {:.2f}, Overflow: {:.2f}, Peak Latency: {:.2f}, Avg Latency: {:.2f}, '
-                  'Status: {}, Server: {}'.format(ms.name, ms.cpu_usage, ms.overflow, ms.peak_latency, ms.avg_latency,
-                                                  ms.state, ms.server)
-                  )
+        # for ms in self.list_ms:
+        #     print('Name: {}, CPU: {:.2f}, Overflow: {:.2f}, Peak Latency: {:.2f}, Avg Latency: {:.2f}, '
+        #           'Status: {}, Server: {}'.format(ms.name, ms.cpu_usage, ms.overflow, ms.peak_latency, ms.avg_latency,
+        #                                           ms.state, ms.server)
+        #           )
         # filter MS with a SHUTDOWN state
         shutdown_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'SHUTDOWN']
         for ms in shutdown_ms:
@@ -265,7 +264,6 @@ class DynaSim:
         toSimMessage.create_actor.CopyFrom(create_actor)
         return toSimMessage
 
-
     def create_parameter_message(self, parameters):
         # auxiliary function
         list_parameter_messages = []
@@ -319,8 +317,7 @@ class DynaSim:
         toSimMessage.traffic_generator_params.CopyFrom(message)
         return [toSimMessage]
 
-    def start_simulation(self, sim_length, tick_freq=1, report_ticks=5, ip="127.0.0.1",
-                         cwd="../dynamicsim/mock-simulators/dynaSim/test/"):
+    def start_simulation(self, sim_length, tick_freq=1, report_ticks=5, ip="127.0.0.1"):
         """
         This function starts automatically the simulation in a non-blocking subprocess. Here we assume that the agent
         and the simulator are running in the same machine. A timestep is an interaction of the agent with the simulator.
@@ -328,18 +325,17 @@ class DynaSim:
         applying the action. Therefore, the simulation length is related to the tick frequency and the number of
         timesteps.
 
-        :param total_timesteps: total time steps that the agent will train or predict. Integer
+        :param sim_length: total time steps that the agent will train or predict. Integer
         :param tick_freq: number of ticks per second
         :param report_ticks: how ticks a report is generated
         :param ip: ip address from the server. It is assumed that both agent and simulation run in the same machine
-        :param cwd: directory from which the make command will run
         :return:
         """
         # You can play with ticks_per_second and report_ticks,
         # if you want a report every second report_ticks = ticks_per_second
 
         # Docker container runs with command:
-        # docker run -it --rm -p 5556:5556 -h docker-simulation.localdomain -e LENGTH=sim_length -e tickspersecond=tick_freq -e IP_PYTHON=ip -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:selection_RO_or_RA_RO
+        # docker run -it --rm -p 5556:5556 -h docker-simulation.localdomain -e LENGTH=sim_length -e tickspersecond=tick_freq -e IP_PYTHON=ip -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
 
         print("Starting simulation")
         environment = ["LENGTH={}".format(sim_length),
@@ -348,14 +344,15 @@ class DynaSim:
                        "reportticks={}".format(report_ticks),
                        "separate_ra=0"]
         client_local = docker.from_env()   # connects to docker daemon
-        client_remote = docker.DockerClient(base_url='ssh://darpa@146.175.219.201', use_ssh_client=False)
+        base_url = "ssh://darpa@{}".format(ip)
+        client_remote = docker.DockerClient(base_url=base_url, use_ssh_client=False)
 
         self.container = client_remote.containers.run(
             image="gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration",
             environment=environment,
             hostname="docker-simulation.localdomain",
             ports={'5556/tcp': 5556},
-            auto_remove=False,
+            auto_remove=True,
             detach=True,
             name="dynasim",
             stdin_open=True,
