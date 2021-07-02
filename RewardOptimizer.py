@@ -8,7 +8,7 @@ from ActorDataClass import MicroserviceDataClass, ServerDataClass
 import TimeManagment
 import numpy as np
 import shortuuid
-
+import json
 
 class RewardOptimizer:
     def __init__(self, timemanager):
@@ -159,6 +159,7 @@ class RewardOptimizer:
         return server_to_select
 
     def add_counter(self, counter):
+        print(counter)
         if "MS_" in counter.actor_name:
             if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
                 new_ms = MicroserviceDataClass(counter.actor_name)
@@ -188,7 +189,8 @@ class RewardOptimizer:
                 new_server.state = counter.value
             if counter.metric == 'service_list':
                 if counter.value != '':
-                    ms_server = counter.value.split(',')
+                    ms_server = json.loads(counter.value)
+                    #ms_server = counter.value.split(',')
                     new_server.ms_list = ms_server
                     for ms_name in ms_server:
                         if not contains(self.list_ms, lambda x: x.name == ms_name):

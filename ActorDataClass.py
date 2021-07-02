@@ -8,6 +8,14 @@ class MicroserviceDataClass:
         self.overflow = 0.0
 
 
+class LoadbalancerDataClass (MicroserviceDataClass):
+    def __init__(self, name):
+        super().__init__(name)
+        self.weights = {}
+        self.weights_state = {}
+        self.last_update = -1
+
+
 class ServerDataClass:
     def __init__(self, name):
         self.name = name

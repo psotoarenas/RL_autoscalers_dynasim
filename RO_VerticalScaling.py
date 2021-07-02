@@ -8,7 +8,7 @@ from ActorDataClass import MicroserviceDataClass, ServerDataClass
 import TimeManagment
 import numpy as np
 import shortuuid
-
+import json
 
 # Make sure that in the CommunicationRO.py file the handle_message function has both float and string counters (line 35-40).
 # This example displays the vertical scaling option (adding more resources to a microservice)
@@ -39,7 +39,7 @@ import shortuuid
 ## At tick 322 we increase the current_thread_limit to 4.1, but this has no effect on the load because the MS is limited to 4.0
 
 # The command of the docker  to test this examples:
-# docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
+# docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:counter_in_json
 
 class RO_VerticalScaling:
     def __init__(self, timemanager):
@@ -197,7 +197,7 @@ class RO_VerticalScaling:
                 new_server.state = counter.value
             if counter.metric == 'service_list':
                 if counter.value != '':
-                    ms_server = counter.value.split(',')
+                    ms_server = json.loads(counter.value)
                     new_server.ms_list = ms_server
                     for ms_name in ms_server:
                         if not contains(self.list_ms, lambda x: x.name == ms_name):

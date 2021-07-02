@@ -7,7 +7,8 @@ from RO_VerticalScaling import RO_VerticalScaling
 from RO_HorizontalScaling import RO_HorizontalScaling
 from RO_ServerMigration import RO_ServerMigration
 from RO_LoadbalancerWeights import RO_LoadbalancerWeight
-import subprocess
+import docker
+
 
 class CommunicationRO:
     def __init__(self, ):
@@ -52,29 +53,11 @@ class CommunicationRO:
 
     def start_simulation(self, sim_length, tick_freq=1, report_ticks=1, ip="127.0.0.1",
                          cwd="../dynamicsim/mock-simulators/dynaSim/test/"):
-        """
-        This function starts automatically the simulation in a non-blocking subprocess. Here we assume that the agent
-        and the simulator are running in the same machine. A timestep is an interaction of the agent with the simulator.
-        We consider an interaction as the agent sending an action and receiving the state of the simulator after
-        applying the action. Therefore, the simulation length is related to the tick frequency and the number of
-        timesteps.
+        client_remote = docker.DockerClient(base_url='ssh://ydebock@143.129.83.93', use_ssh_client=False)
 
-        :param total_timesteps: total time steps that the agent will train or predict. Integer
-        :param tick_freq: number of ticks per second
-        :param report_ticks: how ticks a report is generated
-        :param ip: ip address from the server. It is assumed that both agent and simulation run in the same machine
-        :param cwd: directory from which the make command will run
-        :return:
-        """
-        # if using shell=True in the Popen subprocess, the command should be as single string and not list
-        # The os.setsid fn attach a session id to all child subprocesses created by the simulation (erlang, wooper)
-        # You can play with ticks_per_second and report_ticks,
-        # if you want a report every second report_ticks = ticks_per_second
-        cmd = 'docker run -it --hostname docker-desktop.localdomain -p 5557:5557 -e LENGTH=200 -e tickspersecond=1 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration'
-        #args = shlex.split(cmd)
-        print(args)
-        self.process = subprocess.run(args)
-        print(self.process)
+        container = client_remote.containers.run(image='gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration',
+                           environment={'LENGTH': 1200, 'tickspersecond': 1, 'IP_PYTHON': '143.129.83.94', 'separate_ra': 0},
+                           network='host', auto_remove=True, detach=True, name='dynamicsim')
 
 
 if __name__ == "__main__":

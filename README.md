@@ -67,6 +67,14 @@ python controller and docker container running on the same host machine. However
 More information about the Docker SDK for python: https://docker-py.readthedocs.io/en/stable/
 
 ## Examples
+
+For each version (docker and git tag) the examples can differ. So use for both the simulator and controller the same tag to test the examples
+
+Currently we the following tags with corresponding examples:
+
+- server_migration 
+- counter_in_json
+
 ### Vertical Scaling (_RO_VerticalScaling.py_)
 
 - Make sure that in the CommunicationRO.py file the handle_message function has both float and string counters (line 35-40).

@@ -4,10 +4,11 @@ import x_pb2
 import random
 from base_logger import logger
 import base_logger
-from ActorDataClass import MicroserviceDataClass, ServerDataClass
+from ActorDataClass import MicroserviceDataClass, ServerDataClass, LoadbalancerDataClass
 import TimeManagment
 import numpy as np
 import shortuuid
+import json
 
 # Make sure that in the CommunicationRO.py file the handle_message function has both float and string counters (line 35-40).
 # This example displays the server migration of a MS
@@ -25,6 +26,7 @@ import shortuuid
 ## The parameters are: the MS name and the new weight for this MS. For each MS a new message is sent, but these messages are automatically bundled in
 # one big message by Communicator.
 
+## A weight can be updated only with a value between 0 and 1, otherwise the weight will not be update and report a state=False back to the controller
 ## The loadbalancer adds all the weights and normalize them. Then, it will divide them between MS depending on the normalized weight.
 
 ## For this we need to set the algorithm of the loadbalancer in the Docker environment via: -e loadbalancer_algorithm={weighted|equal},
@@ -35,7 +37,8 @@ import shortuuid
 ## We generate each tick the same traffic load
 ## With an equal load (until tick 5) the load is divide equally between the MS, which results in a load per MS of 0.52
 ## Every 10 ticks we change the weight randomly for each MS, starting at tick 10.
-## After 2 ticks, you will see the result in the loads of the MS which is different for each MS depending on the load.
+## After 1 tick, the new weights will be printed coming from the simulator, betweem smaller than 0 or bigge than 1 will not be changed and the state will be set to False
+## You will see the result in the loads of the MS which is different for each MS depending on the load.
 
 # The command of the docker  to test this examples:
 # docker run -it --rm --network host -e LENGTH=120 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 -e loadbalancer_algorithm=weighted gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
@@ -44,7 +47,7 @@ import shortuuid
 class RO_LoadbalancerWeight:
     def __init__(self, timemanager):
         self.timemanager = timemanager
-        self.loadbalancer = "LoadBalancer"
+        self.loadbalancer = None
         #RA Parameters
         self.distribution_rate = 'uniform'
         self.distribution_execution_time = 'uniform'
@@ -79,6 +82,11 @@ class RO_LoadbalancerWeight:
 
         active_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'RUNNING']
         booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
+
+        if self.loadbalancer.last_update == self.timemanager.getCurrentSimulationTick():
+            for MSName, weight_state in self.loadbalancer.weights_state.items():
+                print("{} last weight update state: {}, current weight: {}".format(MSName, weight_state, self.loadbalancer.weights[MSName]))
+
         tick = self.timemanager.getCurrentSimulationTick()
         if tick == 1:
             for i in range(8):
@@ -86,7 +94,7 @@ class RO_LoadbalancerWeight:
                 parameters = [1.0, 4.0, 1]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice',
                                                          parameters=parameters,
-                                                         incoming_actors=[self.loadbalancer], outgoing_actors=[],
+                                                         incoming_actors=[self.loadbalancer.name], outgoing_actors=[],
                                                          server=self.get_best_server())
                 base_logger.info("New MS: {}".format(actor_name))
                 messages_to_send.append(new_actor)
@@ -94,12 +102,12 @@ class RO_LoadbalancerWeight:
         if tick > 5 and tick % 10 == 0:
             print("Weights: ", end=' ')
             for ms in active_ms:
-                weight = round(random.uniform(0.1, 1), 3)
+                weight = round(random.uniform(-.5, 1.5), 3)
                 ParameterMessages = self.create_parameter_message([ms.name, weight])
                 toSimMessage = x_pb2.ToSimulationMessage()
                 update_weight = x_pb2.UpdateParameterActor()
                 update_weight.type = "microservice"
-                update_weight.name = "LoadBalancer"
+                update_weight.name = self.loadbalancer.name
                 update_weight.parameter_name = "weight"
                 update_weight.parameters.extend(ParameterMessages)
                 toSimMessage.update_parameter_actor.CopyFrom(update_weight)
@@ -141,6 +149,15 @@ class RO_LoadbalancerWeight:
         return server_to_select
 
     def add_counter(self, counter):
+        if "LoadBalancer" in counter.actor_name:
+            if self.loadbalancer is None:
+                self.loadbalancer = LoadbalancerDataClass(counter.actor_name)
+            if counter.metric == 'weights':
+                counter_json = json.loads(counter.value)
+                self.loadbalancer.weights = counter_json['Weights']
+                self.loadbalancer.weights_state = counter_json['Success']
+                self.loadbalancer.last_update = self.timemanager.getCurrentSimulationTick()
+
         if "MS_" in counter.actor_name:
             if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
                 new_ms = MicroserviceDataClass(counter.actor_name)
@@ -170,7 +187,7 @@ class RO_LoadbalancerWeight:
                 new_server.state = counter.value
             if counter.metric == 'service_list':
                 if counter.value != '':
-                    ms_server = counter.value.split(',')
+                    ms_server = json.loads(counter.value)
                     new_server.ms_list = ms_server
                     for ms_name in ms_server:
                         if not contains(self.list_ms, lambda x: x.name == ms_name):
