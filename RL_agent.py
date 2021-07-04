@@ -4,7 +4,7 @@ from stable_baselines import DQN
 from Environment import DynaSimEnv
 import time
 import argparse
-import matplotlib.pyplot as plt
+import os
 import docker
 import sys
 import base_logger
@@ -149,37 +149,11 @@ container.stop()  # default time for stopping: 10 secs
 
 
 ########################################################################################################################
-# Plot your Results.
+# Save your Results.
 ########################################################################################################################
 
-print("Plotting results")
-plt.plot(cpu_usage)
-plt.ylabel('CPU')
-plt.xlabel('Timesteps Evaluation')
-plt.show()
-
-plt.plot(overflow)
-plt.ylabel('Overflow')
-plt.xlabel('Timesteps Evaluation')
-plt.show()
-
-plt.plot(latency)
-plt.ylabel('Latency')
-plt.xlabel('Timesteps Evaluation')
-plt.show()
-
-plt.plot(num_ms)
-plt.ylabel('Number of MS')
-plt.xlabel('Timesteps')
-# plt.savefig('./num_ms.png', dpi=300)
-plt.show()
-
-plt.plot(actions, "o")
-plt.ylabel('Actions')
-plt.xlabel('Timesteps Evaluation')
-plt.show()
-
-plt.plot(rewards)
-plt.ylabel('Reward Agent')
-plt.xlabel('Timesteps Evaluation')
-plt.show()
+# Rename python.traces as exp - training steps (in K) - base steps - testing steps (in K) - report ticks - reward function
+# Remember to change the reward function.
+results_filename = "exp-{}-{}-{}-{}-4.traces".format(timesteps_train, timesteps_base, timesteps_eval, args.report_ticks)
+print(f"Saving results as {results_filename}")
+os.rename("python.traces", results_filename)
