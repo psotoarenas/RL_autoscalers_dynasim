@@ -352,7 +352,7 @@ class DynaSim:
             environment=environment,
             hostname="docker-simulation.localdomain",
             ports={'5556/tcp': 5556},
-            auto_remove=True,
+            auto_remove=False,
             detach=True,
             name="dynasim",
             stdin_open=True,
