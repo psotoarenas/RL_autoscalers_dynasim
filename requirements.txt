@@ -4,6 +4,5 @@ numpy~=1.19
 paramiko~=2.7.2
 docker~=5.0.0
 shortuuid~=1.0.1
-tensorflow==1.15.0
-stable-baselines
+stable-baselines3
 gym

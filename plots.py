@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # traces_filename = "/Users/paola/UA/dynamic_sim/python.traces"
-traces_filename = "/home/darpa/dynamicsim/dynamicsim_ai/python.traces"
+traces_filename = "/home/darpa/dynamicsim/dynamicsim_ai/exp-2000-1000-100-5-4.traces"
 jobs_train = []  # jobs sent
 ms_train = []  # ms deployed
 cpu_usage_train = []
@@ -71,7 +71,7 @@ with open(traces_filename) as f:
             else:
                 action_eval.append(act_2_meaning[int(line.split(":")[-1].rstrip())])
 
-# jobs has 2000 elements while the rest have one element more, the first element can be discarded as it belongs to the first observation
+# jobs has x elements while the rest have x+1, the first element can be discarded as it belongs to the first observation
 jobs_train = np.asarray(jobs_train) / 300.
 ms_train = ms_train[1:]
 cpu_usage_train = cpu_usage_train[1:]
@@ -80,7 +80,7 @@ peak_latency_train = peak_latency_train[1:]
 avg_latency_train = avg_latency_train[1:]
 action_train = action_train[1:]
 
-# jobs has 2000 elements while the rest have one element more, the first element can be discarded as it belongs to the first observation
+# jobs has x elements while the rest have x+1, the first element can be discarded as it belongs to the first observation
 jobs_eval = np.asarray(jobs_eval) / 300.
 ms_eval = ms_eval[1:]
 cpu_usage_eval = cpu_usage_eval[1:]
@@ -89,74 +89,88 @@ peak_latency_eval = peak_latency_eval[1:]
 avg_latency_eval = avg_latency_eval[1:]
 action_eval = action_eval[1:]
 
-# Plot trainig figures
+# Plot training figures
 plt.figure()
 plt.plot(jobs_train)
 plt.title("workload in training")
+plt.savefig('./workload_train.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(ms_train)
 plt.title("number of ms in training")
+plt.savefig('./ms_train.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(cpu_usage_train)
 plt.title("cpu usage in training")
+plt.savefig('./cpu_train.png', dpi=300)
 plt.show()
 
 plt.figure()
-plt.plot(cpu_usage_train)
+plt.plot(overflow_train)
 plt.title("overflow in training")
+plt.savefig('./overflow_train.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(peak_latency_train)
 plt.title("peak latency[sec] in training")
+plt.savefig('./peak_latency_train.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(avg_latency_train)
 plt.title("avg latency[sec] in training")
+plt.savefig('./avg_latency_train.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(action_train, 'o')
 plt.title("actions in training")
+plt.savefig('./actions_train.png', dpi=300)
 plt.show()
 
 # Plot testing figures
 plt.figure()
 plt.plot(jobs_eval)
 plt.title("workload in testing")
+plt.savefig('./workload_test.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(ms_eval)
 plt.title("number of ms in testing")
+plt.savefig('./ms_test.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(cpu_usage_eval)
 plt.title("cpu usage in testing")
+plt.savefig('./cpu_test.png', dpi=300)
 plt.show()
 
 plt.figure()
-plt.plot(cpu_usage_eval)
+plt.plot(overflow_eval)
 plt.title("overflow in testing")
+plt.savefig('./overflow_test.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(peak_latency_eval)
 plt.title("peak latency[sec] in testing")
+plt.savefig('./peak_latency_test.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(avg_latency_eval)
 plt.title("avg latency[sec] in testing")
+plt.savefig('./avg_latency_test.png', dpi=300)
 plt.show()
 
 plt.figure()
 plt.plot(action_eval, 'o')
 plt.title("actions in testing")
+plt.savefig('./actions_test.png', dpi=300)
 plt.show()

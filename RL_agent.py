@@ -1,6 +1,5 @@
-from stable_baselines.deepq.policies import MlpPolicy
-from stable_baselines.common.vec_env import DummyVecEnv
-from stable_baselines import DQN
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3 import DQN
 from Environment import DynaSimEnv
 import time
 import argparse
@@ -21,7 +20,7 @@ parser.add_argument('--timesteps_base', default=10000, type=int, help='Minimum n
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
-parser.add_argument('--agent_name', default='dqn_dynasim', help='Agent Name')
+parser.add_argument('--agent_name', default='dqn-dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 
 args = parser.parse_args()
@@ -53,15 +52,16 @@ base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 # Vectorize Environment.
 ########################################################################################################################
 
-env = DummyVecEnv([lambda: DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second,
-                                      report=args.report_ticks)])
+env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks)
+# wrap it
+env = make_vec_env(lambda: env, n_envs=1)
 
 ########################################################################################################################
 # Create Agent.
 ########################################################################################################################
 
 # to replace the agent, simply invoke another method
-agent = DQN(MlpPolicy, env, verbose=1, tensorboard_log="./dynasim_agent_tensorboard")
+agent = DQN('MlpPolicy', env, verbose=1)
 
 ########################################################################################################################
 # Train Agent.
@@ -92,7 +92,7 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-agent_name = args.agent_name
+agent_name = "{}-{}-{}-{}-{}".format(args.agent_name, timesteps_train, timesteps_base, timesteps_eval, args.report_ticks)
 print(f"Saving agent as {agent_name}")
 agent.save(agent_name)
 print("Training procedure finished")
