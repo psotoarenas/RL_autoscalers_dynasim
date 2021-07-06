@@ -3,6 +3,7 @@ from gym import spaces
 from EnvironmentCommunicator import DynaSim
 import base_logger
 import sys
+import math
 
 import numpy as np
 import threading
@@ -26,7 +27,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, ticks, report):
+    def __init__(self, sim_length, ai_ip, ticks, report, reward_function):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -56,6 +57,7 @@ class DynaSimEnv(gym.Env):
         self.sim_length = sim_length
         self.ticks = ticks
         self.report = report
+        self.reward_function = reward_function
 
         # Setting discrete actions:
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
@@ -87,52 +89,56 @@ class DynaSimEnv(gym.Env):
         obs = self._next_observation()
 
         # assign a reward
-        # Reward 1: based on latency
-        # reward = -abs(obs[1] - self.target)
-
-        # Reward 2: based on latency
-        # if -abs(obs[1] - self.target) > self.tolerance:
-        #     reward = -1
-        # else:
-        #     reward = 0
-
-        # Reward 3: based on latency
-        # if -abs(obs[1] - self.target) > self.tolerance:
-        #     reward = -1
-        # else:
-        #     reward = -abs((obs[1] - self.target) / (self.tolerance * self.target))
-
-        # Reward 4: based on latency
-        if abs(obs[1] - self.target) > self.tolerance * self.target:
-            # there are two cases that are not desirable:
-            if obs[3] < 2:
-                # the agent keeps decreasing the num of MS -> the overflow increases
-                reward = -1 * obs[2]
+        if self.reward_function == 1:
+            # Reward 1: based on latency
+            reward = -abs(obs[1] - self.target)
+        elif self.reward_function == 2:
+            # Reward 2: based on latency
+            if -abs(obs[1] - self.target) > self.tolerance:
+                reward = -1
             else:
-                # the agent keeps increasing the num of MS -> the obs keeps at minimum
-                reward = -1 * obs[3]
-        else:
+                reward = 0
+        elif self.reward_function == 3:
+            # Reward 3: based on latency
+            if -abs(obs[1] - self.target) > self.tolerance:
+                reward = -1
+            else:
+                reward = -abs((obs[1] - self.target) / (self.tolerance * self.target))
+        elif self.reward_function == 4:
+            # Reward 4: based on latency
+            if abs(obs[1] - self.target) > self.tolerance * self.target:
+                # there are two cases that are not desirable:
+                if obs[3] < 2:
+                    # the agent keeps decreasing the num of MS -> the overflow increases
+                    reward = -1 * obs[2]
+                else:
+                    # the agent keeps increasing the num of MS -> the obs keeps at minimum
+                    reward = -1 * obs[3]
+            else:
+                reward = -(obs[1] - self.target) ** 2
+        elif self.reward_function == 5:
+            # Reward 5: based on latency
+            reward = (1 / (obs[1] - self.target)) - (obs[1] - self.target)
+        elif self.reward_function == 6:
+            # Reward 6: based on latency
             reward = -(obs[1] - self.target) ** 2
-
-        # Reward 5: based on latency
-        # reward = (1 / (obs[1] - self.target)) - (obs[1] - self.target)
-
-        # Reward 6: based on latency
-        # reward = -(obs[1] - self.target) ** 2
-
-        # Reward 7: -(latency/target) - (alpha*num_ms*e(-beta*cpu*overflow)
-        # reward = -(obs[1] / self.target) - (self.alpha * obs[3] * math.exp(- self.beta * obs[0] * obs[2]))
+        elif self.reward_function == 7:
+            # Reward 7: -(latency/target) - (alpha*num_ms*e(-beta*cpu*overflow)
+            reward = -(obs[1] / self.target) - (self.alpha * obs[3] * math.exp(- self.beta * obs[0] * obs[2]))
+        else:
+            # Default reward is number 7
+            reward = -(obs[1] / self.target) - (self.alpha * obs[3] * math.exp(- self.beta * obs[0] * obs[2]))
 
         self.acc_reward += reward
         base_logger.info(f"Reward: {reward}")
         # base_logger.info(f"Target: {self.target}")
         # base_logger.info(f"Cum Reward: {self.acc_reward}")
 
-        # if the agent creates more than 50 MSs (one server is limited to 53 MS) or the overflow is greater than 500.,
+        # if the agent creates more than 50 MSs (one server is limited to 53 MS) or the overflow is greater than 250.,
         # end episode and reset simulation
         done = False
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
-        if obs[3] > 50 or obs[2] > 500.:
+        if obs[3] > 50 or obs[2] > 250.:
             done = True
             reward = 10 * reward
 
