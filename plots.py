@@ -1,8 +1,12 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 # traces_filename = "/Users/paola/UA/dynamic_sim/python.traces"
-traces_filename = "/home/darpa/dynamicsim/dynamicsim_ai/exp-2000-1000-100-5-4.traces"
+experiment = "exp-100-100-100-5-5"
+root_folder = "/home/darpa/dynamicsim/dynamicsim_ai/"
+os.chdir(os.path.join(root_folder, experiment))
+traces_filename = experiment + ".traces"
 jobs_train = []  # jobs sent
 ms_train = []  # ms deployed
 cpu_usage_train = []
@@ -94,83 +98,69 @@ plt.figure()
 plt.plot(jobs_train)
 plt.title("workload in training")
 plt.savefig('./workload_train.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(ms_train)
 plt.title("number of ms in training")
 plt.savefig('./ms_train.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(cpu_usage_train)
 plt.title("cpu usage in training")
 plt.savefig('./cpu_train.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(overflow_train)
 plt.title("overflow in training")
 plt.savefig('./overflow_train.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(peak_latency_train)
 plt.title("peak latency[sec] in training")
 plt.savefig('./peak_latency_train.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(avg_latency_train)
 plt.title("avg latency[sec] in training")
 plt.savefig('./avg_latency_train.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(action_train, 'o')
 plt.title("actions in training")
 plt.savefig('./actions_train.png', dpi=300)
-plt.show()
 
 # Plot testing figures
 plt.figure()
 plt.plot(jobs_eval)
 plt.title("workload in testing")
 plt.savefig('./workload_test.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(ms_eval)
 plt.title("number of ms in testing")
 plt.savefig('./ms_test.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(cpu_usage_eval)
 plt.title("cpu usage in testing")
 plt.savefig('./cpu_test.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(overflow_eval)
 plt.title("overflow in testing")
 plt.savefig('./overflow_test.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(peak_latency_eval)
 plt.title("peak latency[sec] in testing")
 plt.savefig('./peak_latency_test.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(avg_latency_eval)
 plt.title("avg latency[sec] in testing")
 plt.savefig('./avg_latency_test.png', dpi=300)
-plt.show()
 
 plt.figure()
 plt.plot(action_eval, 'o')
 plt.title("actions in testing")
 plt.savefig('./actions_test.png', dpi=300)
-plt.show()

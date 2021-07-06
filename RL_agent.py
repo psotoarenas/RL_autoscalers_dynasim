@@ -20,6 +20,7 @@ parser.add_argument('--timesteps_base', default=10000, type=int, help='Minimum n
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
+parser.add_argument('--reward_function', default=7, type=int, help='Reward function')
 parser.add_argument('--agent_name', default='dqn-dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 
@@ -52,7 +53,8 @@ base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 # Vectorize Environment.
 ########################################################################################################################
 
-env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks)
+env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks,
+                 reward_function=args.report_ticks)
 # wrap it
 env = make_vec_env(lambda: env, n_envs=1)
 
@@ -92,24 +94,20 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-agent_name = "{}-{}-{}-{}-{}".format(args.agent_name, timesteps_train, timesteps_base, timesteps_eval, args.report_ticks)
+# create dir for saving results
+results_dir = "exp-{}-{}-{}-{}-{}".format(timesteps_train, timesteps_base, timesteps_eval, args.report_ticks,
+                                          args.reward_function)
+os.makedirs(results_dir, exist_ok=True)
+agent_name = "{}-{}-{}-{}-{}".format(args.agent_name, timesteps_train, timesteps_base, timesteps_eval, args.report_ticks, args.reward_function)
 print(f"Saving agent as {agent_name}")
-agent.save(agent_name)
+agent.save(os.path.join(results_dir, agent_name))
 print("Training procedure finished")
 
 ########################################################################################################################
 # Evaluate your Agent for timesteps_eval.
 ########################################################################################################################
 
-timesteps_eval = args.timesteps_eval
-timestep_rewards = [0.0]
 episode_rewards = [0.0]
-cpu_usage = []
-overflow = []
-latency = []
-num_ms = []
-actions = []
-rewards = []
 print(f"Agent {agent_name} will be evaluated")
 base_logger.info(f"Mode: testing for {timesteps_eval} timesteps")
 
@@ -120,13 +118,6 @@ for i in range(timesteps_eval):
 
     obs, reward, done, info = env.step(action)
 
-    cpu_usage.append(obs[0, 0])
-    latency.append(obs[0, 1])
-    overflow.append(obs[0, 2])
-    num_ms.append(obs[0, 3])
-    rewards.append(reward[0])
-    actions.append(info[0]["action"])
-
     # Stats
     episode_rewards[-1] += reward[0]
     if done:
@@ -136,7 +127,7 @@ for i in range(timesteps_eval):
 base_logger.info("Agent evaluation finished")
 
 # Compute mean reward for the last 100 episodes
-mean_100ep_reward = round(np.mean(episode_rewards[-100:]), 1)
+mean_100ep_reward = np.mean(episode_rewards[-100:])
 print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
 
 # kill simulation before you leave
@@ -145,15 +136,14 @@ client = docker.from_env()
 container = client.containers.get(container_id)
 print(f"Killing container: {container_id}")
 container.stop()  # default time for stopping: 10 secs
-# time.sleep(20)
-
+container.remove()
 
 ########################################################################################################################
 # Save your Results.
 ########################################################################################################################
 
-# Rename python.traces as exp - training steps (in K) - base steps - testing steps (in K) - report ticks - reward function
-# Remember to change the reward function.
-results_filename = "exp-{}-{}-{}-{}-4.traces".format(timesteps_train, timesteps_base, timesteps_eval, args.report_ticks)
+# Rename python.traces as exp - training steps - base steps - testing steps - report ticks - reward function
+results_filename = "exp-{}-{}-{}-{}-{}.traces".format(timesteps_train, timesteps_base, timesteps_eval,
+                                                      args.report_ticks, args.reward_function)
 print(f"Saving results as {results_filename}")
-os.rename("python.traces", results_filename)
+os.rename("python.traces", os.path.join(results_dir, results_filename))
