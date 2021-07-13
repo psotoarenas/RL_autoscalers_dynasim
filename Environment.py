@@ -134,11 +134,11 @@ class DynaSimEnv(gym.Env):
         # base_logger.info(f"Target: {self.target}")
         # base_logger.info(f"Cum Reward: {self.acc_reward}")
 
-        # if the agent creates more than 50 MSs (one server is limited to 53 MS) or the overflow is greater than 250.,
+        # if the agent creates more than 50 MSs (one server is limited to 53 MS) or the overflow is greater than 500.,
         # end episode and reset simulation
         done = False
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
-        if obs[3] > 50 or obs[2] > 250.:
+        if obs[3] > 50 or obs[2] > 500.:
             done = True
             reward = 10 * reward
 

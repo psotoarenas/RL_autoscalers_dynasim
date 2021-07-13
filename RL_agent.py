@@ -54,7 +54,7 @@ base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
 ########################################################################################################################
 
 env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks,
-                 reward_function=args.report_ticks)
+                 reward_function=args.reward_function)
 # wrap it
 env = make_vec_env(lambda: env, n_envs=1)
 
