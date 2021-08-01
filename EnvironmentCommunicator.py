@@ -171,10 +171,10 @@ class DynaSim:
             peak_latency = self.max_peak_latency
             avg_latency = self.avg_latency / self.number_of_ms
             base_logger.info("MS: {}".format(self.number_of_ms))
-            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
-            base_logger.info("Overflow: {:.2f}".format(overflow))
-            base_logger.info("Peak Latency: {:.2f}".format(peak_latency))
-            base_logger.info("Avg Latency: {:.2f}".format(avg_latency))
+            base_logger.info("Cpu Usage: {:.5f}".format(cpu_usage))
+            base_logger.info("Overflow: {:.5f}".format(overflow))
+            base_logger.info("Peak Latency: {:.5f}".format(peak_latency))
+            base_logger.info("Avg Latency: {:.5f}".format(avg_latency))
         #     todo: what to do with the booting_ms list?
 
         # todo: # manage server
@@ -384,7 +384,7 @@ class DynaSim:
             # restart the docker container
             self.container.restart()  # default time for stopping: 10 secs
             self.first_observation = False
-            self.tick = 0
+            # self.tick = 0
             self.list_ms = []
             # time.sleep(15)
             existing_container = True

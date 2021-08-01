@@ -1,3 +1,5 @@
+from stable_baselines3.common.results_plotter import load_results, ts2xy
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import DQN
 from Environment import DynaSimEnv
@@ -9,6 +11,54 @@ import sys
 import base_logger
 import numpy as np
 
+
+########################################################################################################################
+# Define Callback to save best model.
+########################################################################################################################
+
+class SaveOnBestTrainingRewardCallback(BaseCallback):
+    """
+    Callback for saving a model (the check is done every ``check_freq`` steps)
+    based on the training reward (in practice, we recommend using ``EvalCallback``).
+
+    :param check_freq: (int)
+    :param log_dir: (str) Path to the folder where the model will be saved.
+      It must contains the file created by the ``Monitor`` wrapper.
+    :param verbose: (int)
+    """
+    def __init__(self, check_freq: int, log_dir: str, verbose=1):
+        super(SaveOnBestTrainingRewardCallback, self).__init__(verbose)
+        self.check_freq = check_freq
+        self.log_dir = log_dir
+        self.save_path = os.path.join(log_dir, 'best_model')
+        self.best_mean_reward = -np.inf
+
+    def _init_callback(self) -> None:
+        # Create folder if needed
+        if self.save_path is not None:
+            os.makedirs(self.save_path, exist_ok=True)
+
+    def _on_step(self) -> bool:
+        if self.n_calls % self.check_freq == 0:
+            # Retrieve training reward
+            x, y = ts2xy(load_results(self.log_dir), 'timesteps')
+            if len(x) > 0:
+                # Mean training reward over the last 100 episodes
+                mean_reward = np.mean(y[-100:])
+                if self.verbose > 0:
+                    print(f"Num timesteps: {self.num_timesteps}")
+                    print(f"Best mean reward: {self.best_mean_reward:.2f} - Last mean reward per episode: {mean_reward:.2f}")
+
+                # New best model, you could save the agent here
+                if mean_reward > self.best_mean_reward:
+                    self.best_mean_reward = mean_reward
+                    # Example for saving best model
+                if self.verbose > 0:
+                    print(f"Saving new best model to {self.save_path}.zip")
+                self.model.save(self.save_path)
+        return True
+
+
 ########################################################################################################################
 # Command line arguments.
 ########################################################################################################################
@@ -16,11 +66,9 @@ import numpy as np
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
 parser.add_argument('--timesteps_eval', default=10000, type=int, help='Number of interactions for evaluating agent')
-parser.add_argument('--timesteps_base', default=10000, type=int, help='Minimum number of timesteps in an episode')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
-parser.add_argument('--reward_function', default=7, type=int, help='Reward function')
 parser.add_argument('--agent_name', default='dqn-dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 
@@ -47,16 +95,34 @@ if not (sim_length >= (time_steps + 2) * args.report_ticks):
     sys.exit("Simulation ticks must be larger than the timesteps for training or testing. "
              "At least sim_length = (timesteps + 2) * report_ticks")
 # logger
-base_logger.default_extra = {'app_name': 'DQN_Agent', 'node': 'localhost'}
+base_logger.default_extra = {'app_name': f'{args.agent_name}', 'node': 'localhost'}
 
 ########################################################################################################################
-# Vectorize Environment.
+# Create dir for saving results
 ########################################################################################################################
 
-env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks,
-                 reward_function=args.reward_function)
+results_dir = f"exp-{args.agent_name}-{timesteps_train}-{timesteps_eval}-{args.report_ticks}"
+nb_exp = []
+for folder_name in os.listdir('./'):
+    if folder_name.startswith(results_dir):
+        nb_exp.append(int(folder_name.split("-")[-1]))
+if nb_exp:
+    nb_exp.sort()
+    last_exp = nb_exp[-1]
+else:
+    # first experiment
+    last_exp = -1
+
+results_dir = results_dir + "-" + str(last_exp + 1)
+os.makedirs(results_dir, exist_ok=True)
+
+########################################################################################################################
+# Create and wrap the environment.
+########################################################################################################################
+
+env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks)
 # wrap it
-env = make_vec_env(lambda: env, n_envs=1)
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 
 ########################################################################################################################
 # Create Agent.
@@ -69,22 +135,15 @@ agent = DQN('MlpPolicy', env, verbose=1)
 # Train Agent.
 ########################################################################################################################
 
-timesteps_base = args.timesteps_base
-base_logger.info(f"Mode: training for {timesteps_train} timesteps with {timesteps_base} base")
+base_logger.info(f"Mode: training for {timesteps_train} timesteps")
 start = time.time()
 
-# the training is now per episodes. episodes = timesteps_train / timesteps_base
-# if the simulation is not restarted, the agent is able to see a pattern of timesteps_base the number of episodes
-episodes = int(float(timesteps_train)/float(timesteps_base))
-
-if episodes < 1:
-    sys.exit("The number of timesteps for training should be bigger than the timesteps_base")
-
-for episode in range(episodes):
-    base_logger.info(f"Episode: {episode}")
-    # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
-    # save to memory buffer and repeat for the number of timesteps.
-    agent.learn(total_timesteps=timesteps_base)
+# the training is now per episodes. An episode is the number of steps until the simulation is restarted
+# (episode termination). Thus, we might have episodes of different length
+# inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
+# save to memory buffer and repeat for the number of timesteps.
+callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=results_dir)
+agent.learn(total_timesteps=timesteps_train, callback=callback)
 
 end = time.time()
 
@@ -94,11 +153,8 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-# create dir for saving results
-results_dir = "exp-{}-{}-{}-{}-{}".format(timesteps_train, timesteps_base, timesteps_eval, args.report_ticks,
-                                          args.reward_function)
-os.makedirs(results_dir, exist_ok=True)
-agent_name = "{}-{}-{}-{}-{}".format(args.agent_name, timesteps_train, timesteps_base, timesteps_eval, args.report_ticks, args.reward_function)
+agent_name = f"{args.agent_name}-{timesteps_train}-{timesteps_eval}-{args.report_ticks}-{last_exp + 1}"
+
 print(f"Saving agent as {agent_name}")
 agent.save(os.path.join(results_dir, agent_name))
 print("Training procedure finished")
@@ -111,17 +167,17 @@ episode_rewards = [0.0]
 print(f"Agent {agent_name} will be evaluated")
 base_logger.info(f"Mode: testing for {timesteps_eval} timesteps")
 
-obs = env.reset()
+state = env.reset()
 for i in range(timesteps_eval):
     # _states are only useful when using LSTM policies
-    action, _states = agent.predict(obs)
+    action, _states = agent.predict(state)
 
-    obs, reward, done, info = env.step(action)
+    state, reward, done, info = env.step(action)
 
     # Stats
-    episode_rewards[-1] += reward[0]
+    episode_rewards[-1] += reward
     if done:
-        obs = env.reset()
+        state = env.reset()
         episode_rewards.append(0.0)
 
 base_logger.info("Agent evaluation finished")
@@ -142,8 +198,7 @@ container.remove()
 # Save your Results.
 ########################################################################################################################
 
-# Rename python.traces as exp - training steps - base steps - testing steps - report ticks - reward function
-results_filename = "exp-{}-{}-{}-{}-{}.traces".format(timesteps_train, timesteps_base, timesteps_eval,
-                                                      args.report_ticks, args.reward_function)
+# Rename python.traces as exp - agent_type - training steps - testing steps - report ticks - experiment
+results_filename = f"exp-{args.agent_name}-{timesteps_train}-{timesteps_eval}-{args.report_ticks}-{last_exp + 1}.traces"
 print(f"Saving results as {results_filename}")
 os.rename("python.traces", os.path.join(results_dir, results_filename))

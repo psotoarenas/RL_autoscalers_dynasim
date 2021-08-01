@@ -26,3 +26,6 @@ class TimeManagement:
 
     def getCurrentTickOffsetString(self):
         return "{{{},0}}".format(self.current_tick)
+
+    def getCurrentSimulationTick(self):
+        return self.current_tick
