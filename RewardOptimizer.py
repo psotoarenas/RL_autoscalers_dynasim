@@ -22,12 +22,9 @@ class RewardOptimizer:
             self.alpha = float(line[1])
             self.beta = float(line[2])
             self.soft = int(line[3])
-        #self.tgtlatency = 0.02
-        #self.alpha = 0.1 # default 80.0
-        #self.beta = 100.0 # default 40.0
-        #self.soft = 1
         self.fraction = 0.0 
-        #self.counter = 0
+        self.minNrMs = 1
+        self.maxNrMs = 50
 
     def getUpdate(self):
         return self.load_algorithm()
@@ -75,8 +72,13 @@ class RewardOptimizer:
             old = self.oldlatency
             fraction = self.fraction
             delta = alpha * (latency - tgt) + beta * (latency - old)
-            if self.soft == 1 and len(active_ms) > 1: delta += fraction
-            else: fraction = 0.0
+            #if self.soft == 1 and len(active_ms) > 1: 
+            if self.soft == 1: 
+                if len(active_ms) == self.minNrMs: fraction = max(fraction, 0.0)
+                if len(active_ms) == self.maxNrMs: fraction = min(fraction, 0.0)
+                delta += fraction
+            else: 
+                fraction = 0.0
 
             #print("delta: {:.4f}".format(delta), end=', ')
             #print("fraction: {:.4f}".format(fraction), end=', ')
