@@ -96,7 +96,7 @@ for timestep in range(timesteps):
 
 end = time.time()
 
-base_logger.info(f"Agent end training. Elapsed time: {end - start}")
+base_logger.info(f"Agent end testing. Elapsed time: {end - start}")
 
 ########################################################################################################################
 # Clean before you leave

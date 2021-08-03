@@ -44,6 +44,7 @@ def plot_results(log_folder, title='Learning Curve'):
     plt.xlabel('Number of Timesteps')
     plt.ylabel('Rewards')
     plt.title(title + " Smoothed")
+    plt.savefig('./train_rewards.png', dpi=300)
     plt.show()
     return
 
@@ -61,6 +62,7 @@ def plot_episodes(log_folder, title='Episode Length Curve'):
     plt.xlabel('Number of Timesteps')
     plt.ylabel('Episode Lengths')
     plt.title(title + " Smoothed")
+    plt.savefig('./train_episode_length.png', dpi=300)
     plt.show()
     return
 
