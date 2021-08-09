@@ -11,6 +11,8 @@ import os
 ########################################################################################################################
 # define target latency = 20ms
 target_latency = 0.02
+# define target CPU = 75% usage
+target_cpu = 0.75
 # define a tolerance of 20% the target
 tolerance = 0.2
 
@@ -81,13 +83,14 @@ start = time.time()
 # do nothing if the peak latency is within a threshold. Action is an integer with the following meaning:
 # {0: "increase", 1: "decrease", 2: "nothing"}
 latency = 0.0033
+cpu = 0.5
 state = env.reset()
 for timestep in range(timesteps):
-    if latency - target_latency > target_latency * tolerance:
-        # increase the num of ms, cause the latency is high
+    if (latency - target_latency > target_latency * tolerance) or (cpu - target_cpu > target_cpu * tolerance):
+        # increase the num of ms, cause the latency or the cpu usage is high
         action = 0
-    elif latency - target_latency < target_latency * tolerance:
-        # decrease the num of ms, cause the latency is low
+    elif (latency - target_latency < target_latency * tolerance) or (cpu - target_cpu < target_cpu * tolerance):
+        # decrease the num of ms, cause the latency or the cpu usage is low
         action = 1
     else:
         action = 2
