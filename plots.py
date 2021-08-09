@@ -68,7 +68,7 @@ def plot_episodes(log_folder, title='Episode Length Curve'):
 
 
 # traces_filename = "/Users/paola/UA/dynamic_sim/python.traces"
-experiment = "exp-dqn-dynasim-100000-100000-2-0"
+experiment = "exp-rule-dynasim-100000-2-0"
 root_folder = "/home/darpa/dynamicsim/dynamicsim_ai/"
 os.chdir(os.path.join(root_folder, experiment))
 traces_filename = experiment + ".traces"
@@ -278,8 +278,8 @@ plt.show()
 # Plots from stable-baselines3
 
 # Helper from the library
-results_plotter.plot_results([os.path.join(root_folder, experiment)], 1e5, results_plotter.X_TIMESTEPS, "Dynasim")
+# results_plotter.plot_results([os.path.join(root_folder, experiment)], 1e5, results_plotter.X_TIMESTEPS, "Dynasim")
 
-plot_results(os.path.join(root_folder, experiment))
+# plot_results(os.path.join(root_folder, experiment))
 
-plot_episodes(os.path.join(root_folder, experiment))
+# plot_episodes(os.path.join(root_folder, experiment))

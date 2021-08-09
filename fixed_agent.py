@@ -70,7 +70,7 @@ timesteps_base = args.timesteps_base
 base_logger.info(f"Mode: testing for {timesteps} timesteps")
 start = time.time()
 
-# this is a fixed agent, it will increase the number of ms up till 10 every timesteps_base,
+# this is a fixed agent, it will increase the number of ms up till 6 every timesteps_base,
 # after that, the agent won't do anything. Action is an integer with the following meaning:
 # {0: "increase", 1: "decrease", 2: "nothing"}
 num_ms = 0
