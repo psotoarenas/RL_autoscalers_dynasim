@@ -47,6 +47,8 @@ class DynaSim:
         self.execution_time_params = [1]
         self.tick = 0
         random.seed(7)
+        with open('trafficTrace.csv') as f:
+            self.job_list = [int(el) for el in f.read().split()]
 
     def run(self):
         with self._communicator:
@@ -289,18 +291,7 @@ class DynaSim:
 
     def compute_traffic(self):
         # compute the traffic that is sent to the simulator
-        offset = 1616745600  # 9:00 March 25, 2021
-        timeOfDay = offset + self.tick
-        new_params = max(int(300.0 * (0.9 + 0.1 * np.cos(np.pi * timeOfDay / 864000.0)) *
-                             (4.0 + 1.2 * np.sin(2.0 * np.pi * timeOfDay / 86400.0) -
-                              0.6 * np.sin(6.0 * np.pi * timeOfDay / 86400.0) +
-                              0.02 * (np.sin(503.0 * np.pi * timeOfDay / 86400.0) -
-                                      np.sin(709.0 * np.pi * timeOfDay / 86400.0) * random.expovariate(1.0))) +
-                             self.memory + 5.0 * random.gauss(0.0, 1.0)), 0)
-        if random.random() < 1e-4:
-            self.memory += 200.0 * random.expovariate(1.0)
-        else:
-            self.memory *= 0.99
+        new_params = self.job_list[self.tick]
         self.tick += 1
         self.size_params[0] = new_params
         base_logger.info("Traffic: {}".format(new_params))
@@ -401,6 +392,3 @@ def contains(list_ms, filter_ms):
         if filter_ms(x):
             return True
     return False
-
-
-
