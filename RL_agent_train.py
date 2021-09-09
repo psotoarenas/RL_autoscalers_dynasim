@@ -35,8 +35,8 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 
     def _init_callback(self) -> None:
         # Create folder if needed
-        if self.save_path is not None:
-            os.makedirs(self.save_path, exist_ok=True)
+        if self.log_dir is not None:
+            os.makedirs(self.log_dir, exist_ok=True)
 
     def _on_step(self) -> bool:
         if self.n_calls % self.check_freq == 0:
@@ -65,7 +65,6 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
 parser.add_argument('--timesteps_train', default=10000, type=int, help='Number of interactions for training agent')
-parser.add_argument('--timesteps_eval', default=10000, type=int, help='Number of interactions for evaluating agent')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
@@ -82,16 +81,9 @@ args = parser.parse_args()
 # should be set by the number of timesteps (interactions with the simulator) and the number of report ticks.
 # simulation length should be longer than the number of timesteps (train or evaluation) to gracefully finish the process
 timesteps_train = args.timesteps_train
-timesteps_eval = args.timesteps_eval
-
-# check which of the two timesteps is longer
-if timesteps_train > timesteps_eval:
-    time_steps = timesteps_train
-else:
-    time_steps = timesteps_eval
 
 sim_length = args.sim_length
-if not (sim_length >= (time_steps + 2) * args.report_ticks):
+if not (sim_length >= (timesteps_train + 2) * args.report_ticks):
     sys.exit("Simulation ticks must be larger than the timesteps for training or testing. "
              "At least sim_length = (timesteps + 2) * report_ticks")
 # logger
@@ -101,7 +93,7 @@ base_logger.default_extra = {'app_name': f'{args.agent_name}', 'node': 'localhos
 # Create dir for saving results
 ########################################################################################################################
 
-results_dir = f"exp-{args.agent_name}-{timesteps_train}-{timesteps_eval}-{args.report_ticks}"
+results_dir = f"exp-train-{args.agent_name}-{timesteps_train}-{args.report_ticks}"
 nb_exp = []
 for folder_name in os.listdir('./'):
     if folder_name.startswith(results_dir):
@@ -153,39 +145,17 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-agent_name = f"{args.agent_name}-{timesteps_train}-{timesteps_eval}-{args.report_ticks}-{last_exp + 1}"
+agent_name = f"{args.agent_name}-{timesteps_train}-{args.report_ticks}-{last_exp + 1}"
 
 print(f"Saving agent as {agent_name}")
 agent.save(os.path.join(results_dir, agent_name))
 print("Training procedure finished")
 
 ########################################################################################################################
-# Evaluate your Agent for timesteps_eval.
+# Kill Container.
 ########################################################################################################################
-
-episode_rewards = [0.0]
-print(f"Agent {agent_name} will be evaluated")
-base_logger.info(f"Mode: testing for {timesteps_eval} timesteps")
-
-state = env.reset()
-for i in range(timesteps_eval):
-    # _states are only useful when using LSTM policies
-    action, _states = agent.predict(state)
-
-    state, reward, done, info = env.step(action)
-
-    # Stats
-    episode_rewards[-1] += reward
-    if done:
-        state = env.reset()
-        episode_rewards.append(0.0)
-
-base_logger.info("Agent evaluation finished")
-
-# Compute mean reward for the last 100 episodes
-mean_100ep_reward = np.mean(episode_rewards[-100:])
-print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
-
+action = np.array([2])
+state, reward, done, info = env.step(action)
 # kill simulation before you leave
 container_id = info[0]["container_id"]
 client = docker.from_env()
@@ -198,7 +168,7 @@ container.remove()
 # Save your Results.
 ########################################################################################################################
 
-# Rename python.traces as exp - agent_type - training steps - testing steps - report ticks - experiment
-results_filename = f"exp-{args.agent_name}-{timesteps_train}-{timesteps_eval}-{args.report_ticks}-{last_exp + 1}.traces"
+# Rename python.traces as exp - agent_type - training steps - report ticks - experiment
+results_filename = f"exp-{args.agent_name}-{timesteps_train}-{args.report_ticks}-{last_exp + 1}.traces"
 print(f"Saving results as {results_filename}")
 os.rename("python.traces", os.path.join(results_dir, results_filename))
