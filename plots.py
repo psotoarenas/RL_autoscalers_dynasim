@@ -3,18 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.results_plotter import load_results, ts2xy
-
-
-def plot_restarts(axis, y_min, y_max, restarts):
-    # plot restarts
-    y_min = y_min
-    y_max = y_max
-    line_restarts = None
-
-    for xcoord in restarts:
-        line_restarts, = axis.plot([xcoord, xcoord], [y_min, y_max], 'g')
-    return line_restarts
-
+import pandas as pd
+from matplotlib.gridspec import GridSpec
 
 def moving_average(values, window):
     """
@@ -27,17 +17,17 @@ def moving_average(values, window):
     return np.convolve(values, weights, 'valid')
 
 
-def plot_results(log_folder, title='Learning Curve'):
+def plot_results(log_folder, num_timesteps, title='Learning Curve'):
     """
     plot the results
 
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
     """
-    x, y = ts2xy(load_results(log_folder), 'timesteps')
-    y = moving_average(y, window=50)
-    # Truncate x
-    x = x[len(x) - len(y):]
+    data_frame = load_results(log_folder)
+    if num_timesteps is not None:
+        data_frame = data_frame[data_frame.l.cumsum() <= num_timesteps]
+    x, y = ts2xy(data_frame, 'timesteps')
 
     fig = plt.figure(title)
     plt.plot(x, y)
@@ -53,9 +43,6 @@ def plot_episodes(log_folder, title='Episode Length Curve'):
     dataframe = load_results(log_folder)
     x = np.cumsum(dataframe.l.values)
     y = dataframe.l.values
-    y = moving_average(y, window=50)
-    # Truncate x
-    x = x[len(x) - len(y):]
 
     fig = plt.figure(title)
     plt.plot(x, y)
@@ -66,9 +53,8 @@ def plot_episodes(log_folder, title='Episode Length Curve'):
     plt.show()
     return
 
-
-# traces_filename = "/Users/paola/UA/dynamic_sim/python.traces"
-experiment = "exp-rule-dynasim-100000-2-0"
+# traces_filename = "../python.traces"
+experiment = "exp-dqn-dynasim-300000-500000-2-1"
 root_folder = "/home/darpa/dynamicsim/dynamicsim_ai/"
 os.chdir(os.path.join(root_folder, experiment))
 traces_filename = experiment + ".traces"
@@ -83,6 +69,9 @@ peak_latency = {key: [] for key in modes}
 avg_latency = {key: [] for key in modes}
 action = {key: [] for key in modes}
 reward = {key: [] for key in modes}
+cum_reward = {key: [] for key in modes}
+reward_cum = {key: [] for key in modes}
+current_timesteps = {key: [] for key in modes}
 restarts_per_episode = {key: {} for key in modes}
 timesteps = {}
 
@@ -96,7 +85,7 @@ act_2_meaning = {
 with open(traces_filename) as f:
     mode = modes[0]
     current_step = 0
-    episode = 0
+    cumulative_reward = 0
     for line in f:
         line = line.rstrip().split("|")[-1]
         if line.startswith("Mode"):
@@ -105,13 +94,15 @@ with open(traces_filename) as f:
             if mode == "training": timesteps["base"] = int(line.split(":")[-1].rstrip().split()[-2])
         if line.startswith("Step"):
             current_step = int(line.split(":")[-1].rstrip())
-        if line.startswith("Episode"):
-            current_step = 0
-            episode = int(line.split(":")[-1].lstrip())
+            current_timesteps[mode].append(current_step)
         if line.startswith("Environment Reset"):
-            if episode not in restarts_per_episode[mode]:
-                restarts_per_episode[mode][episode] = []
-            restarts_per_episode[mode][episode].append(current_step)
+            if not restarts_per_episode[mode]:
+                # dict is empty
+                restarts_per_episode[mode] = []
+            if current_step != 0:
+                # if it is not the first step
+                restarts_per_episode[mode].append(current_step)
+                cum_reward[mode].append(cumulative_reward)
         if line.startswith("Traffic"):
             jobs[mode].append(int(line.split(":")[-1].rstrip()))
         if line.startswith("MS"):
@@ -126,44 +117,29 @@ with open(traces_filename) as f:
             avg_latency[mode].append(float(line.split(":")[-1].rstrip()))
         if line.startswith("Reward"):
             reward[mode].append(float(line.split(":")[-1].rstrip()))
+        if line.startswith("Cum Reward"):
+            cumulative_reward = float(line.split(":")[-1].rstrip())
+            reward_cum[mode].append(float(line.split(":")[-1].rstrip()))
         if line.startswith("Action"):
             line = line.split(",")[0]
             action[mode].append(act_2_meaning[int(line.split(":")[-1].rstrip())])
         if line.startswith("Agent end training"):
             print(line)
+    # first episode testing is actually the last training episode.
+    # get values and delete from incorrect list
+    last_cum_reward_train = cum_reward["testing"].pop(0)
+    last_episode_len_train = restarts_per_episode["testing"].pop(0)
+    # add to the correct list
+    cum_reward["training"].append(last_cum_reward_train)
+    restarts_per_episode["training"].append(last_episode_len_train)
+    # add last episode testing
+    cum_reward["testing"].append(cumulative_reward)
+    restarts_per_episode["testing"].append(current_step)
 
 
-# Statistics
-# # get the restarts. Enable if restarts plot_restarts is used
-# xcoords_restart = []
-# xcoord = 0
-# prev_restart = 0
-# for training_episode in restarts_per_episode["training"]:
-#     for xcoord in restarts_per_episode["training"][training_episode]:
-#         if xcoord == 0:
-#             if training_episode != 0:
-#                 xcoords_restart.append(training_episode * timesteps["base"])
-#                 prev_restart = xcoords_restart[-1]
-#             else:
-#                 xcoords_restart.append(xcoord)
-#         else:
-#             xcoords_restart.append(xcoord + prev_restart)
-#             prev_restart = xcoords_restart[-1]
-
-# Plot training figures
-# every ms can process 300 jobs per tick, jobs/300 will give the right amount of MS the system will need
-# # ------------------------- plot with restarts (too noisy) --------------------------------------------------
-# _, axis = plt.subplots()
-# jobs_handle, = axis.plot(np.array(jobs["training"])/300.)
-# y_min = np.min(np.array(jobs["training"])/300.)
-# y_max = np.max(np.array(jobs["training"])/300.)
-# restart_handle = plot_restarts(axis=axis, y_min=y_min, y_max=y_max, restarts=xcoords_restart)
-# plt.legend(handles=[jobs_handle, restart_handle], labels=['workload', 'restarts'], loc='upper right')
-# # -----------------------------------------------------------------------------------------------------------
-# ---------------------------- plot without restarts  ---------------------------------------------------------
+# --------------- workload ------------------------------
 plt.figure()
 plt.plot(np.array(jobs["training"])/300., label="workload")
-# ------------------------------------------------------------------------------------------------------------
 plt.title("workload in training")
 plt.savefig('./workload_train.png', dpi=300)
 plt.show()
@@ -208,24 +184,57 @@ plt.title("actions in training")
 plt.savefig('./actions_train.png', dpi=300)
 plt.show()
 
-# # ------------------------- plot with restarts (too noisy) --------------------------------------------------
-# _, axis = plt.subplots()
-# rewards_handle, = axis.plot(np.array(reward["training"]))
-# y_min = np.min(np.array(reward["training"]))
-# y_max = np.max(np.array(reward["training"]))
-# restart_handle = plot_restarts(axis=axis, y_min=y_min, y_max=y_max, restarts=xcoords_restart)
-# plt.legend(handles=[rewards_handle, restart_handle], labels=['rewards', 'restarts'], loc='upper right')
-# # ------------------------------------------------------------------------------------------------------------
-# ---------------------------- plot without restarts  ---------------------------------------------------------
+# ---------------------------- immediate rewards  ---------------------------------------------------------
 plt.figure()
 plt.plot(np.array(reward["training"]))
-# ------------------------------------------------------------------------------------------------------------
 plt.title("rewards in training")
 plt.savefig('./rewards_train.png', dpi=300)
 plt.show()
 # ------------------------------------------------------------------------------------------------------------
 
-# Plot testing figures
+# ---------------------------- cumulative rewards (from SB)  ---------------------------------------------------------
+x = np.cumsum(np.array(restarts_per_episode["training"]))
+y = np.array(cum_reward["training"])
+plt.figure()
+plt.plot(x, y)
+plt.xlabel('Number of Timesteps')
+plt.ylabel('Rewards')
+plt.title("cum. reward in training")
+plt.savefig('./cum_reward_train.png', dpi=300)
+plt.show()
+# ------------------------------------------------------------------------------------------------------------
+# ---------------------------- episode length (from SB) ---------------------------------------------------------
+x = np.cumsum(np.array(restarts_per_episode["training"]))
+y = np.array(restarts_per_episode["training"])
+plt.figure()
+plt.plot(x, y)
+plt.xlabel('Number of Timesteps')
+plt.ylabel('Rewards')
+plt.title("Episode Length Curve in training")
+plt.savefig('./len_episode_train.png', dpi=300)
+plt.show()
+# ------------------------------------------------------------------------------------------------------------
+
+# ---------------------------- cumulative rewards (own) ---------------------------------------------------------
+plt.figure()
+plt.plot(np.array(reward_cum["training"]))
+plt.xlabel('Number of Timesteps')
+plt.ylabel('Rewards')
+plt.title("cum. reward in training")
+plt.savefig('./reward_cum_train.png', dpi=300)
+plt.show()
+# ------------------------------------------------------------------------------------------------------------
+# ---------------------------- episode length (own)  ---------------------------------------------------------
+plt.figure()
+plt.plot(np.array(current_timesteps["training"]))
+plt.xlabel('Number of Timesteps')
+plt.ylabel('Episode Length')
+plt.title("Episode Length Curve in training")
+plt.savefig('./episode_len_train.png', dpi=300)
+plt.show()
+# ------------------------------------------------------------------------------------------------------------
+
+# ##################### Plot testing figures #############################################################
 plt.figure()
 # every ms can process 300 jobs per tick, jobs/300 will give the right amount of MS the system will need
 plt.plot(np.array(jobs["testing"])/300.)
@@ -274,12 +283,43 @@ plt.title("rewards in testing")
 plt.savefig('./rewards_test.png', dpi=300)
 plt.show()
 
+# plots for paper
+fontsize=12
+
+fig = plt.figure(constrained_layout=True, figsize=(12,3))
+gs = GridSpec(2, 3, figure=fig)
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(np.array(ms["testing"]), label='VNF')
+ax1.set_title('Num VNFs', fontsize=fontsize)
+ax2 = fig.add_subplot(gs[1, 0])
+ax2.plot(np.array(jobs["testing"])/300., label='Work')
+ax2.set_xlabel('Timesteps', fontsize=fontsize)
+ax2.set_title('Workload', fontsize=fontsize)
+ax2.sharex(ax1)
+ax3 = fig.add_subplot(gs[0:, 1])
+ax3.plot(np.array(peak_latency["testing"]), label='peak_lat')
+ax3.set_xlabel('Timesteps', fontsize=fontsize)
+ax3.set_title('Peak Latency [sec]', fontsize=fontsize)
+ax4 = fig.add_subplot(gs[0:, 2])
+ax4.plot(np.array(cpu_usage["testing"]), label='cpu')
+ax4.plot(np.array(overflow["testing"]), label='overflow')
+ax4.set_xlabel('Timesteps', fontsize=fontsize)
+ax4.set_title('CPU Usage [%] |Overflow [Num_jobs]', fontsize=fontsize)
+ax4.legend()
+
+plt.savefig('./results_paper.png', dpi=300)
+plt.show()
+
+
+# Statistics
+df = pd.DataFrame({'num_ms': ms["testing"], 'peak_latency': peak_latency["testing"]})
+print(df.describe())
 
 # Plots from stable-baselines3
-
 # Helper from the library
-# results_plotter.plot_results([os.path.join(root_folder, experiment)], 1e5, results_plotter.X_TIMESTEPS, "Dynasim")
-
-# plot_results(os.path.join(root_folder, experiment))
-
-# plot_episodes(os.path.join(root_folder, experiment))
+results_plotter.plot_results([os.path.join(root_folder, experiment)], timesteps["training"], results_plotter.X_TIMESTEPS, "Dynasim")
+plt.show()
+# function based implemented with helpers from SB
+plot_results(os.path.join(root_folder, experiment), timesteps["training"])
+# function based implemented with helpers from SB
+plot_episodes(os.path.join(root_folder, experiment))
