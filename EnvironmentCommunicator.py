@@ -11,7 +11,7 @@ import shortuuid
 
 
 class DynaSim:
-    def __init__(self, ):
+    def __init__(self, mode):
         # communicator side
         self._communicator = Communicator(5556, 5557)
         self._communicator.add_notifier(lambda m: self.handle_message(m))
@@ -45,10 +45,17 @@ class DynaSim:
         self.rate_params = [100]
         self.memory = 0
         self.execution_time_params = [1]
-        self.tick = 0
+        if mode == "train":
+            self.tick = 0
+            with open('trafficTrace.csv') as f:
+                self.job_list = [int(el) for el in f.read().split()]
+        else:
+            self.tick = 432000
+            # with open('trafficTrace.csv') as f:
+            with open('../trafficTrace.csv') as f:
+                self.job_list = [int(el) for el in f.read().split()]
         random.seed(7)
-        with open('trafficTrace.csv') as f:
-            self.job_list = [int(el) for el in f.read().split()]
+
 
     def run(self):
         with self._communicator:

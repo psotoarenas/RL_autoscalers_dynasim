@@ -27,7 +27,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, ticks, report):
+    def __init__(self, sim_length, ai_ip, ticks, report, mode="test"):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -35,7 +35,7 @@ class DynaSimEnv(gym.Env):
 
         # start communication with simulator in a thread
         print("Starting communication")
-        self.dynasim = DynaSim()
+        self.dynasim = DynaSim(mode)
         self.zmq_com = threading.Thread(target=self.dynasim.run)
         self.zmq_com.daemon = True  # allows to kill the communication with the simulator
         self.zmq_com.start()
