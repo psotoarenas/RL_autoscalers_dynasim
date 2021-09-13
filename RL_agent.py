@@ -260,4 +260,4 @@ else:
     # Rename python.traces as exp - agent_type - testing steps - report ticks - experiment
     results_filename = f"exp-{args.agent_name}-{timesteps}-{args.report_ticks}-{last_exp + 1}.traces"
     print(f"Saving results as {results_filename}")
-    os.rename("python.traces", os.path.join(results_dir, results_filename))
+    os.rename("../python.traces", os.path.join(results_dir, results_filename))
