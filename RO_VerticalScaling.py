@@ -39,7 +39,7 @@ import json
 ## At tick 322 we increase the current_thread_limit to 4.1, but this has no effect on the load because the MS is limited to 4.0
 
 # The command of the docker  to test this examples:
-# docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:counter_in_json
+# docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:new_job_passing
 
 class RO_VerticalScaling:
     def __init__(self, timemanager):
@@ -168,7 +168,7 @@ class RO_VerticalScaling:
         return server_to_select
 
     def add_counter(self, counter):
-        if "MS_" in counter.actor_name:
+        if "MS_" in counter.actor_name or "Load" in counter.actor_name:
             if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
                 new_ms = MicroserviceDataClass(counter.actor_name)
                 self.list_ms.append(new_ms)
@@ -239,6 +239,7 @@ class RO_VerticalScaling:
         self.size_params[0] = 200 + 30 * self.tick_increase
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()
+        message.name = "Client"
         message.distribution_rate = self.distribution_rate
         message.parameters_rate.extend(self.rate_params)
 

@@ -55,9 +55,10 @@ class CommunicationRO:
                          cwd="../dynamicsim/mock-simulators/dynaSim/test/"):
         client_remote = docker.DockerClient(base_url='ssh://ydebock@143.129.83.93', use_ssh_client=False)
 
-        container = client_remote.containers.run(image='gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration',
-                           environment={'LENGTH': 1200, 'tickspersecond': 1, 'IP_PYTHON': '143.129.83.94', 'separate_ra': 0},
-                           network='host', auto_remove=True, detach=True, name='dynamicsim')
+        client_remote.containers.run(image='gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:counter_in_json',
+                                          environment={'LENGTH': sim_length, 'tickspersecond': tick_freq,
+                                                       'IP_PYTHON': ip, 'separate_ra': 0},
+                                          network='host', auto_remove=True, detach=True)
 
 
 if __name__ == "__main__":
@@ -76,6 +77,6 @@ if __name__ == "__main__":
     #         ipaddress = arg
 
     messagehandler = CommunicationRO()
-    #messagehandler.start_simulation(1000, 5)
+    #messagehandler.start_simulation(sim_length=1000, ip="143.129.83.94")
     messagehandler.run()
 

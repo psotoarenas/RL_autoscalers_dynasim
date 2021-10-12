@@ -4,7 +4,7 @@ import x_pb2
 import random
 from base_logger import logger
 import base_logger
-from ActorDataClass import MicroserviceDataClass, ServerDataClass
+from ActorDataClass import MicroserviceDataClass, ServerDataClass, ClientGeneratorDataClass, LoadbalancerDataClass
 import TimeManagment
 import numpy as np
 import shortuuid
@@ -28,6 +28,7 @@ class RewardOptimizer:
         self.tick_increase = 2
         self.list_ms = []
         self.list_server = []
+        self.list_client = []
 
         base_logger.default_extra = {'app_name': 'RewardOptimizer', 'node': 'localhost'}
         base_logger.timemanager = self.timemanager
@@ -37,10 +38,15 @@ class RewardOptimizer:
         self.last_report = time.time()
         messages_ro = self.load_algorithm_test()
         messages_ra = self.getUpdateRA()
-        return messages_ra + messages_ro
+        #return messages_ra + messages_ro
+        return []
 
     def load_algorithm_test(self):
         messages_to_send = []
+        tick = self.timemanager.getCurrentSimulationTick()
+        print(tick)
+        if tick >= 10:
+            messages_to_send += self.init_simulation(10, tick)
 
         for ms in self.list_ms:
             print('Name: {}, CPU: {:.2f}, Overflow: {}, Status: {}, Server: {}'.format(ms.name, ms.cpu_usage, ms.overflow, ms.state, ms.server))
@@ -64,25 +70,25 @@ class RewardOptimizer:
             cpu_usage = cpu_usage / len(active_ms)
             overflow = overflow / len(active_ms)
             base_logger.info("MS: {} ({})".format(len(active_ms), self.timemanager.getCurrentSimulationTick()))
-            base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
-            base_logger.info("Overflow: {:.2f}".format(overflow))
+            # base_logger.info("Cpu Usage: {:.2f}".format(cpu_usage))
+            # base_logger.info("Overflow: {:.2f}".format(overflow))
 
-            if cpu_usage < 0.4 and len(active_ms) > 1:
-                ms_to_delete = active_ms.pop()
-                delete_actor = self.remove_actor(ms_to_delete.name, 'microservice')
-                print("Deleted: {}".format(ms_to_delete.name))
-                messages_to_send.append(delete_actor)
-
-            elif cpu_usage > 0.8 and len(booting_ms) == 0:
-                # actor_name = "MS_{}".format(len(all_ms) + 1)
-                actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
-                parameters = [1.0, 1.0, 1]
-                new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
-                                                         incoming_actors=["LoadBalancer"], outgoing_actors=[], server="Server_1")
-                # print(new_actor)
-                base_logger.info("New MS: {}".format(actor_name))
-                messages_to_send.append(new_actor)
-
+            # if cpu_usage < 0.4 and len(active_ms) > 1:
+            #     ms_to_delete = active_ms.pop()
+            #     delete_actor = self.remove_actor(ms_to_delete.name, 'microservice')
+            #     print("Deleted: {}".format(ms_to_delete.name))
+            #     messages_to_send.append(delete_actor)
+            #
+            # if cpu_usage > 0.8 and len(booting_ms) == 0:
+            #     # actor_name = "MS_{}".format(len(all_ms) + 1)
+            #     actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
+            #     parameters = [1.0, 1.0, 1]
+            #     new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice', parameters=parameters,
+            #                                              incoming_actors=["LoadBalancer"], outgoing_actors=[], server="Server_1")
+            #     # print(new_actor)
+            #     base_logger.info("New MS: {}".format(actor_name))
+            #     messages_to_send.append(new_actor)
+        #
         for server in self.list_server:
             print('Name: {}, CPU: {:.2f}, Status: {}, MS: {}'.format(server.name, server.cpu_usage, server.state, [ms for ms in server.ms_list]))
 
@@ -97,8 +103,8 @@ class RewardOptimizer:
                 cpu_usage += server.cpu_usage
 
             cpu_usage = cpu_usage / len(self.list_server)
-            # base_logger.info("Cpu Usage server: {:.2f}".format(cpu_usage))
-            # base_logger.info("Overflow: {:.2f}".format(overflow))
+            base_logger.info("Cpu Usage server: {:.2f}".format(cpu_usage))
+            base_logger.info("Overflow: {:.2f}".format(overflow))
 
             # if cpu_usage < 0.1 and self.number_of_ms > 1:
             #     ms_name, _ = self.weight_per_ms.popitem()
@@ -125,6 +131,71 @@ class RewardOptimizer:
                 messages_to_send.append(toSimMessage)
                 print("Create new Server: {}".format(actor_name))
         return messages_to_send
+
+    def init_simulation(self, start_tick, cur_tick):
+        list_actors = []
+        parameters = [1.0, 1.0, 1]
+
+        if cur_tick == start_tick:
+            # ms_name_1 = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
+            # ms_1 = self.create_new_microservice(ms_name_1, actor_type='class_ChainedMicroservice',
+            #                                     parameters=parameters,
+            #                                     incoming_actors=["LoadBalancer"], outgoing_actors=["LoadBalancer_ji5jeVb4"],
+            #                                     server="Server_1")
+            # list_actors.append(ms_1)
+
+            client_name = "Client_2"
+            parameters_server = [[100], [400], [1]]
+            ParameterMessages = self.create_parameter_message(parameters_server)
+            client_actor = x_pb2.ToSimulationMessage()
+            create_actor = x_pb2.CreateActor()
+            message = x_pb2.CreateGenericActor()
+            message.actor_type = 'class_ClientTrafficGenerator'
+            message.name = client_name
+            message.parameters.extend(ParameterMessages)
+            create_actor.generic_actor.CopyFrom(message)
+            client_actor.create_actor.CopyFrom(create_actor)
+            list_actors.append(client_actor)
+
+            server_name = "Server_2"
+            parameters_server = [300, 10, 16000]
+            ParameterMessages = self.create_parameter_message(parameters_server)
+            server_actor = x_pb2.ToSimulationMessage()
+            create_actor = x_pb2.CreateActor()
+            message = x_pb2.CreateGenericActor()
+            message.actor_type = 'class_Server'
+            message.name = server_name
+            message.parameters.extend(ParameterMessages)
+            create_actor.generic_actor.CopyFrom(message)
+            server_actor.create_actor.CopyFrom(create_actor)
+            list_actors.append(server_actor)
+
+        if cur_tick == start_tick + 1:
+
+            lb_name = "Loadbalancer_2"
+            ms_1 = self.create_new_microservice(lb_name, actor_type='class_LoadBalancerService',
+                                                parameters=['equal'],
+                                                incoming_actors=["Client_2"], outgoing_actors=[],
+                                                server="Server_2")
+            list_actors.append(ms_1)
+
+        if cur_tick == start_tick + 2:
+            ms_name_2 = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
+            ms_2 = self.create_new_microservice(ms_name_2, actor_type='class_SimpleMicroservice',
+                                                parameters=parameters,
+                                                incoming_actors=["Loadbalancer_2"], outgoing_actors=[],
+                                                server="Server_2")
+
+            list_actors.append(ms_2)
+
+            ms_name_3 = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
+            ms_3 = self.create_new_microservice(ms_name_3, actor_type='class_SimpleMicroservice',
+                                                parameters=parameters,
+                                                incoming_actors=["Loadbalancer_2"], outgoing_actors=[],
+                                                server="Server_2")
+
+            list_actors.append(ms_3)
+        return list_actors
 
     def create_new_microservice(self, name, actor_type, incoming_actors, outgoing_actors=[], parameters=[], server='Server_1'):
         ParameterMessages = self.create_parameter_message(parameters)
@@ -159,7 +230,6 @@ class RewardOptimizer:
         return server_to_select
 
     def add_counter(self, counter):
-        print(counter)
         if "MS_" in counter.actor_name:
             if not contains(self.list_ms, lambda x: x.name == counter.actor_name):
                 new_ms = MicroserviceDataClass(counter.actor_name)
@@ -202,14 +272,21 @@ class RewardOptimizer:
                 else:
                     new_server.ms_list = []
 
+        if "Client" in counter.actor_name:
+            if not contains(self.list_client, lambda x: x.name == counter.actor_name):
+                new_client = ClientGeneratorDataClass(counter.actor_name)
+                self.list_client.append(new_client)
+
     def create_parameter_message(self, parameters):
         list_parameter_messages = []
         for parameter in parameters:
             param_message = x_pb2.Parameter()
             if isinstance(parameter, (float, int)):
                 param_message.float_value = parameter
-            else:
+            elif isinstance(parameter, str):
                 param_message.string_value = parameter
+            elif isinstance(parameter, list):
+                param_message.string_value = json.dumps(parameter)
 
             list_parameter_messages.append(param_message)
 
@@ -233,17 +310,24 @@ class RewardOptimizer:
 
         tick = self.timemanager.getCurrentSimulationTick()
 
-        if tick < 1500:
-            if tick % 50 == 0:
-                self.tick_increase += 1
-        if tick > 1500 and self.tick_increase > 0:
-            if tick % 50 == 0:
-                self.tick_increase -= 1
+        if len(self.list_client) == 0:
+            return []
 
-        self.size_params[0] = 260 * self.tick_increase + 10
+        if tick > 1500:
+            if tick % 100 == 0:
+                self.tick_increase += 1
+        # if tick > 1500 and self.tick_increase > 0:
+        #     if tick % 50 == 0:
+        #         self.tick_increase -= 1
+        for cl in self.list_client:
+            print(cl.name, end=", ")
+        print()
+
+        self.size_params[0] = 200 * self.tick_increase + 10
         #print(timeOfDay, new_params)
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()
+        message.name = "Client"
         message.distribution_rate = self.distribution_rate
         message.parameters_rate.extend(self.rate_params)
 

@@ -41,7 +41,7 @@ import json
 ## You will see the result in the loads of the MS which is different for each MS depending on the load.
 
 # The command of the docker  to test this examples:
-# docker run -it --rm --network host -e LENGTH=120 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 -e loadbalancer_algorithm=weighted gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration
+# docker run -it --rm --network host -e LENGTH=120 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 -e loadbalancer_algorithm=weighted gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:new_job_passing
 
 
 class RO_LoadbalancerWeight:
@@ -221,6 +221,7 @@ class RO_LoadbalancerWeight:
         #print(timeOfDay, new_params)
         toSimMessage = x_pb2.ToSimulationMessage()
         message = x_pb2.TrafficGeneratorParameters()
+        message.name = "Client"
         message.distribution_rate = self.distribution_rate
         message.parameters_rate.extend(self.rate_params)
 

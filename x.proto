@@ -6,12 +6,13 @@ message RegisterCommunicator {
 }
 
 message TrafficGeneratorParameters{
-    string distribution_rate = 1;
-    repeated float parameters_rate = 2;
-    string distribution_execution_time = 3;
-    repeated float parameters_execution_time = 4;
-    string distribution_size = 5;
-    repeated float parameters_size = 6;
+    string name = 1;
+    string distribution_rate = 2;
+    repeated float parameters_rate = 3;
+    string distribution_execution_time = 4;
+    repeated float parameters_execution_time = 5;
+    string distribution_size = 6;
+    repeated float parameters_size = 7;
 }
 
 message MessageRequest {

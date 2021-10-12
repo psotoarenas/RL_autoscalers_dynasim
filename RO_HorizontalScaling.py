@@ -35,7 +35,7 @@ import json
 ## The controller is only for testing this feature
 
 # The command of the docker  to test this examples:
-# docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:counter_to_string
+# docker run -it --rm --network host -e LENGTH=1200 -e IP_PYTHON=143.129.83.94 -e separate_ra=0 gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:new_job_passing
 
 class RO_HorizontalScaling:
     def __init__(self, timemanager):
@@ -259,6 +259,7 @@ class RO_HorizontalScaling:
         message = x_pb2.TrafficGeneratorParameters()
         message.distribution_rate = self.distribution_rate
         message.parameters_rate.extend(self.rate_params)
+        message.name = "Client"
 
         message.distribution_execution_time = self.distribution_execution_time
         message.parameters_execution_time.extend(self.execution_time_params)

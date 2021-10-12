@@ -24,3 +24,8 @@ class ServerDataClass:
         self.state = 'UNKNOWN'
 
 
+class ClientGeneratorDataClass:
+    def __init__(self, name):
+        self.name = name
+
+

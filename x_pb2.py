@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='x.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\xcc\x01\n\x1aTrafficGeneratorParameters\x12\x19\n\x11\x64istribution_rate\x18\x01 \x01(\t\x12\x17\n\x0fparameters_rate\x18\x02 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x03 \x01(\t\x12!\n\x19parameters_execution_time\x18\x04 \x03(\x02\x12\x19\n\x11\x64istribution_size\x18\x05 \x01(\t\x12\x17\n\x0fparameters_size\x18\x06 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"T\n\x0c\x43ounterFloat\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\x02\"U\n\rCounterString\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\t\"Z\n\x08\x43ounters\x12%\n\x0e\x63ounters_float\x18\x01 \x03(\x0b\x32\r.CounterFloat\x12\'\n\x0f\x63ounters_string\x18\x02 \x03(\x0b\x32\x0e.CounterString\"C\n\tParameter\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x15\n\x0b\x66loat_value\x18\x02 \x01(\x02H\x00\x42\x07\n\x05value\"\x9d\x01\n\x12\x43reateMicroservice\x12\x12\n\nactor_type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0bserver_name\x18\x03 \x01(\t\x12\x17\n\x0fincoming_actors\x18\x04 \x03(\t\x12\x17\n\x0foutgoing_actors\x18\x05 \x03(\t\x12\x1e\n\nparameters\x18\x06 \x03(\x0b\x32\n.Parameter\"k\n\x12\x43reateGenericActor\x12\x12\n\nactor_type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0bserver_name\x18\x03 \x01(\t\x12\x1e\n\nparameters\x18\x04 \x03(\x0b\x32\n.Parameter\"q\n\x0b\x43reateActor\x12+\n\x0cmicroservice\x18\x01 \x01(\x0b\x32\x13.CreateMicroserviceH\x00\x12,\n\rgeneric_actor\x18\x02 \x01(\x0b\x32\x13.CreateGenericActorH\x00\x42\x07\n\x05\x61\x63tor\"6\n\x0bRemoveActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03pid\x18\x03 \x01(\t\"j\n\x14UpdateParameterActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x16\n\x0eparameter_name\x18\x03 \x01(\t\x12\x1e\n\nparameters\x18\x04 \x03(\x0b\x32\n.Parameter\"\xf6\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1d\n\x08\x63ounters\x18\x07 \x01(\x0b\x32\t.CountersH\x00\x42\t\n\x07payload\"\xfc\x01\n\x13ToSimulationMessage\x12\x14\n\x0cpid_receiver\x18\x01 \x01(\t\x12?\n\x18traffic_generator_params\x18\x02 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x12$\n\x0c\x63reate_actor\x18\x04 \x01(\x0b\x32\x0c.CreateActorH\x00\x12$\n\x0cremove_actor\x18\x05 \x01(\x0b\x32\x0c.RemoveActorH\x00\x12\x37\n\x16update_parameter_actor\x18\x06 \x01(\x0b\x32\x15.UpdateParameterActorH\x00\x42\t\n\x07payload\"Q\n\x12ResponseSimulation\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12&\n\x08messages\x18\x02 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
+  serialized_pb=_b('\n\x07x.proto\"1\n\x14RegisterCommunicator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03pid\x18\x02 \x01(\t\"\xda\x01\n\x1aTrafficGeneratorParameters\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11\x64istribution_rate\x18\x02 \x01(\t\x12\x17\n\x0fparameters_rate\x18\x03 \x03(\x02\x12#\n\x1b\x64istribution_execution_time\x18\x04 \x01(\t\x12!\n\x19parameters_execution_time\x18\x05 \x03(\x02\x12\x19\n\x11\x64istribution_size\x18\x06 \x01(\t\x12\x17\n\x0fparameters_size\x18\x07 \x03(\x02\"!\n\x0eMessageRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"a\n\x0eSimulationInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x19\n\x11simulation_length\x18\x02 \x01(\x05\x12\x13\n\x0btick_length\x18\x03 \x01(\x02\x12\x11\n\tipaddress\x18\x04 \x01(\t\"T\n\x0c\x43ounterFloat\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\x02\"U\n\rCounterString\x12\x12\n\nactor_name\x18\x01 \x01(\t\x12\x11\n\tactor_pid\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\r\n\x05value\x18\x04 \x01(\t\"Z\n\x08\x43ounters\x12%\n\x0e\x63ounters_float\x18\x01 \x03(\x0b\x32\r.CounterFloat\x12\'\n\x0f\x63ounters_string\x18\x02 \x03(\x0b\x32\x0e.CounterString\"C\n\tParameter\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x15\n\x0b\x66loat_value\x18\x02 \x01(\x02H\x00\x42\x07\n\x05value\"\x9d\x01\n\x12\x43reateMicroservice\x12\x12\n\nactor_type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0bserver_name\x18\x03 \x01(\t\x12\x17\n\x0fincoming_actors\x18\x04 \x03(\t\x12\x17\n\x0foutgoing_actors\x18\x05 \x03(\t\x12\x1e\n\nparameters\x18\x06 \x03(\x0b\x32\n.Parameter\"k\n\x12\x43reateGenericActor\x12\x12\n\nactor_type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0bserver_name\x18\x03 \x01(\t\x12\x1e\n\nparameters\x18\x04 \x03(\x0b\x32\n.Parameter\"q\n\x0b\x43reateActor\x12+\n\x0cmicroservice\x18\x01 \x01(\x0b\x32\x13.CreateMicroserviceH\x00\x12,\n\rgeneric_actor\x18\x02 \x01(\x0b\x32\x13.CreateGenericActorH\x00\x42\x07\n\x05\x61\x63tor\"6\n\x0bRemoveActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03pid\x18\x03 \x01(\t\"j\n\x14UpdateParameterActor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x16\n\x0eparameter_name\x18\x03 \x01(\t\x12\x1e\n\nparameters\x18\x04 \x03(\x0b\x32\n.Parameter\"\xf6\x01\n\x0fToPythonMessage\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12\x13\n\x0btick_offset\x18\x02 \x01(\x05\x12\x12\n\npid_sender\x18\x03 \x01(\t\x12\"\n\x07request\x18\x04 \x01(\x0b\x32\x0f.MessageRequestH\x00\x12\x1f\n\x04info\x18\x05 \x01(\x0b\x32\x0f.SimulationInfoH\x00\x12\x36\n\x15register_communicator\x18\x06 \x01(\x0b\x32\x15.RegisterCommunicatorH\x00\x12\x1d\n\x08\x63ounters\x18\x07 \x01(\x0b\x32\t.CountersH\x00\x42\t\n\x07payload\"\xfc\x01\n\x13ToSimulationMessage\x12\x14\n\x0cpid_receiver\x18\x01 \x01(\t\x12?\n\x18traffic_generator_params\x18\x02 \x01(\x0b\x32\x1b.TrafficGeneratorParametersH\x00\x12$\n\x0c\x63reate_actor\x18\x04 \x01(\x0b\x32\x0c.CreateActorH\x00\x12$\n\x0cremove_actor\x18\x05 \x01(\x0b\x32\x0c.RemoveActorH\x00\x12\x37\n\x16update_parameter_actor\x18\x06 \x01(\x0b\x32\x15.UpdateParameterActorH\x00\x42\t\n\x07payload\"Q\n\x12ResponseSimulation\x12\x13\n\x0btransfer_id\x18\x01 \x01(\x05\x12&\n\x08messages\x18\x02 \x03(\x0b\x32\x14.ToSimulationMessageb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -72,43 +72,50 @@ _TRAFFICGENERATORPARAMETERS = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='distribution_rate', full_name='TrafficGeneratorParameters.distribution_rate', index=0,
+      name='name', full_name='TrafficGeneratorParameters.name', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='parameters_rate', full_name='TrafficGeneratorParameters.parameters_rate', index=1,
-      number=2, type=2, cpp_type=6, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='distribution_execution_time', full_name='TrafficGeneratorParameters.distribution_execution_time', index=2,
-      number=3, type=9, cpp_type=9, label=1,
+      name='distribution_rate', full_name='TrafficGeneratorParameters.distribution_rate', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='parameters_execution_time', full_name='TrafficGeneratorParameters.parameters_execution_time', index=3,
-      number=4, type=2, cpp_type=6, label=3,
+      name='parameters_rate', full_name='TrafficGeneratorParameters.parameters_rate', index=2,
+      number=3, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='distribution_size', full_name='TrafficGeneratorParameters.distribution_size', index=4,
-      number=5, type=9, cpp_type=9, label=1,
+      name='distribution_execution_time', full_name='TrafficGeneratorParameters.distribution_execution_time', index=3,
+      number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='parameters_size', full_name='TrafficGeneratorParameters.parameters_size', index=5,
-      number=6, type=2, cpp_type=6, label=3,
+      name='parameters_execution_time', full_name='TrafficGeneratorParameters.parameters_execution_time', index=4,
+      number=5, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='distribution_size', full_name='TrafficGeneratorParameters.distribution_size', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='parameters_size', full_name='TrafficGeneratorParameters.parameters_size', index=6,
+      number=7, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -126,7 +133,7 @@ _TRAFFICGENERATORPARAMETERS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=63,
-  serialized_end=267,
+  serialized_end=281,
 )
 
 
@@ -156,8 +163,8 @@ _MESSAGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=269,
-  serialized_end=302,
+  serialized_start=283,
+  serialized_end=316,
 )
 
 
@@ -208,8 +215,8 @@ _SIMULATIONINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=304,
-  serialized_end=401,
+  serialized_start=318,
+  serialized_end=415,
 )
 
 
@@ -260,8 +267,8 @@ _COUNTERFLOAT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=403,
-  serialized_end=487,
+  serialized_start=417,
+  serialized_end=501,
 )
 
 
@@ -312,8 +319,8 @@ _COUNTERSTRING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=489,
-  serialized_end=574,
+  serialized_start=503,
+  serialized_end=588,
 )
 
 
@@ -350,8 +357,8 @@ _COUNTERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=576,
-  serialized_end=666,
+  serialized_start=590,
+  serialized_end=680,
 )
 
 
@@ -391,8 +398,8 @@ _PARAMETER = _descriptor.Descriptor(
       name='value', full_name='Parameter.value',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=668,
-  serialized_end=735,
+  serialized_start=682,
+  serialized_end=749,
 )
 
 
@@ -457,8 +464,8 @@ _CREATEMICROSERVICE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=738,
-  serialized_end=895,
+  serialized_start=752,
+  serialized_end=909,
 )
 
 
@@ -509,8 +516,8 @@ _CREATEGENERICACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=897,
-  serialized_end=1004,
+  serialized_start=911,
+  serialized_end=1018,
 )
 
 
@@ -550,8 +557,8 @@ _CREATEACTOR = _descriptor.Descriptor(
       name='actor', full_name='CreateActor.actor',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1006,
-  serialized_end=1119,
+  serialized_start=1020,
+  serialized_end=1133,
 )
 
 
@@ -595,8 +602,8 @@ _REMOVEACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1121,
-  serialized_end=1175,
+  serialized_start=1135,
+  serialized_end=1189,
 )
 
 
@@ -647,8 +654,8 @@ _UPDATEPARAMETERACTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1177,
-  serialized_end=1283,
+  serialized_start=1191,
+  serialized_end=1297,
 )
 
 
@@ -723,8 +730,8 @@ _TOPYTHONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToPythonMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1286,
-  serialized_end=1532,
+  serialized_start=1300,
+  serialized_end=1546,
 )
 
 
@@ -785,8 +792,8 @@ _TOSIMULATIONMESSAGE = _descriptor.Descriptor(
       name='payload', full_name='ToSimulationMessage.payload',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1535,
-  serialized_end=1787,
+  serialized_start=1549,
+  serialized_end=1801,
 )
 
 
@@ -823,8 +830,8 @@ _RESPONSESIMULATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1789,
-  serialized_end=1870,
+  serialized_start=1803,
+  serialized_end=1884,
 )
 
 _COUNTERS.fields_by_name['counters_float'].message_type = _COUNTERFLOAT
