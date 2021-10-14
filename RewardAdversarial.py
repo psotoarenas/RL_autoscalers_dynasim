@@ -34,7 +34,7 @@ class RewardAdversarial:
         message = x_pb2.TrafficGeneratorParameters()
         message.distribution_rate = self.distribution_rate
         message.parameters_rate.extend(self.rate_params)
-
+        message.name = "Client"
         message.distribution_execution_time = self.distribution_execution_time
         message.parameters_execution_time.extend(self.execution_time_params)
 
