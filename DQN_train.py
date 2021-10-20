@@ -122,7 +122,7 @@ print(f"Saving agent as {agent_name}")
 agent.save(os.path.join(results_dir, agent_name))
 # upload data to wandb server
 agent.save(os.path.join(wandb.run.dir, agent_name+".zip"))
-wandb.config.training_time = end - start
+wandb.config.execution_time = end - start
 wandb.save("Environment.py")
 # TODO: verify if longer trainings are saved or the python.traces must be uploaded too.
 print("Training procedure finished")
