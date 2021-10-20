@@ -2,8 +2,6 @@ import gym
 from gym import spaces
 from EnvironmentCommunicator import DynaSim
 import base_logger
-import sys
-import math
 
 import numpy as np
 import threading
@@ -43,6 +41,7 @@ class DynaSimEnv(gym.Env):
         # initialize timesteps
         self.current_step = 0
         self.acc_reward = 0
+        self.prev_state = None
 
         # define target latency = 20ms
         self.target_latency = 0.02
@@ -50,6 +49,7 @@ class DynaSimEnv(gym.Env):
         self.target_cpu = 0.75
         # define a tolerance of 20% the target
         self.tolerance = 0.2
+        self.threshold = (1 + self.tolerance) * self.target_latency
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -88,18 +88,32 @@ class DynaSimEnv(gym.Env):
         self.state = self._next_observation()
         cpu, latency, overflow, num_ms = self.state
 
-        # assign a reward
-        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
-                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
+        _, prev_latency, _, prev_ms = self.prev_state
+
+        # case reward
+        # if latency remains above threshold, agent is always penalized
+        # if prev_latency > self.threshold and latency > self.threshold:
+        #     reward = -1
+        # except if it increases the MS to get below the threshold
+        if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
+            reward = 1
+        # # if prev latency is below threshold, but increases the MS, the agent is penalized
+        # elif prev_latency <= self.threshold and action == self.INCREASE and latency <= self.threshold:
+        #     reward = -1
+        # # if prev latency is below threshold, but decreases the MS and gets above the thd, the agent is penalized
+        # elif prev_latency <= self.threshold and action == self.DECREASE and latency > self.threshold:
+        #     reward = -1
+        # # if prev latency is below threshold, but decreases the MS while maintaining below thd, the agent is rewarded
+        elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
             reward = 1
         else:
-            reward = 0
+            reward = 0   # other non-considered cases
 
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the overflow is greater than 200.,
         # or the peak latency is above 3 seconds end episode and reset simulation
         done = False
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
-        if num_ms > 20 or overflow > 200. or latency > 3.:
+        if num_ms > 30 or latency > 2. :
             done = True
             # hard penalization
             reward = -100
@@ -108,6 +122,7 @@ class DynaSimEnv(gym.Env):
         base_logger.info(f"Reward: {reward}")
         # base_logger.info(f"Target: {self.target_latency}")
         base_logger.info(f"Cum Reward: {self.acc_reward}")
+        self.prev_state = self.state
 
         return self.state, reward, done, {'num_ms': self.dynasim.number_of_ms, 'action': action,
                                           'container_id': self.dynasim.container.id}
@@ -143,9 +158,14 @@ class DynaSimEnv(gym.Env):
 
         base_logger.info("Environment Reset")
         self.current_step = 0
-        return self._next_observation()
+        self.prev_state = self._next_observation()
+        return self.prev_state
 
     def render(self, mode='human', close=False):
         print(f'Step: {self.current_step}')
         print(f'Num_of_ms: {self.dynasim.number_of_ms}')
 
+    def close(self):
+        self.dynasim.stop_simulation()
+        # stop thread of communication
+        self.dynasim.stop_thread.set()
