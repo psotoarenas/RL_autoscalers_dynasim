@@ -167,5 +167,3 @@ class DynaSimEnv(gym.Env):
 
     def close(self):
         self.dynasim.stop_simulation()
-        # stop thread of communication
-        self.dynasim.stop_thread.set()

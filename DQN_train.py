@@ -86,10 +86,11 @@ run = wandb.init(
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
     save_code=True,  # optional
-    notes="training",
+    notes="train",
     )
 
 wandb.config.update(args)
+wandb.config.update({"run_id": wandb.run.id})
 
 # to replace the agent, simply invoke another method
 agent = DQN(config["policy_type"], env, verbose=1)

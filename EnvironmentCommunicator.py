@@ -386,7 +386,7 @@ class DynaSim:
             self.list_ms = []
             # time.sleep(20)
             existing_container = True
-            print("Container exist")
+            print("Container stopped")
         else:
             existing_container = False
             print("No container to stop")
@@ -403,7 +403,7 @@ class DynaSim:
             self.list_ms = []
             # time.sleep(15)
             existing_container = True
-            print("Container exist")
+            print("Container restarted")
         else:
             existing_container = False
             print("No container to restart")
