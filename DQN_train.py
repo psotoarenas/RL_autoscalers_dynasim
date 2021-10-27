@@ -86,7 +86,7 @@ run = wandb.init(
     config=config,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
-    save_code=False,  # optional
+    save_code=True,  # optional
     )
 
 wandb.config.update(args)

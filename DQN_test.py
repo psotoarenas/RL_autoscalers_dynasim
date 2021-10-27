@@ -33,7 +33,7 @@ agent_name = "DQN"
 # every incoming report is considered an interaction with the simulator. Therefore, the simulation length (in ticks)
 # should be set by the number of timesteps (interactions with the simulator) and the number of report ticks.
 # simulation length should be longer than the number of timesteps (train or evaluation) to gracefully finish the process
-timesteps = 1728
+timesteps = 172800
 
 sim_length = args.sim_length
 if not (sim_length >= (timesteps + 2) * args.report_ticks):
@@ -87,7 +87,7 @@ run = wandb.init(
     config=config,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
-    save_code=False,  # optional
+    save_code=True,  # optional
     )
 
 wandb.config.update(args)

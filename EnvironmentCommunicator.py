@@ -380,7 +380,7 @@ class DynaSim:
         if self.container:
             # stop the docker container
             self.container.stop()  # default time for stopping: 10 secs
-            # self.container.remove()
+            self.container.remove()
             self.first_observation = False
             self.tick = 0
             self.list_ms = []
