@@ -79,6 +79,7 @@ config = {
     "total_timesteps": timesteps,
     "env_name": "Dynasim",
     "agent_name": agent_name,
+    "mode": "test"
 }
 
 run = wandb.init(
@@ -86,8 +87,7 @@ run = wandb.init(
     config=config,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
-    save_code=True,  # optional
-    notes="test",
+    save_code=False,  # optional
     )
 
 wandb.config.update(args)
