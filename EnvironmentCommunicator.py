@@ -358,9 +358,9 @@ class DynaSim:
                        "separate_ra=0"]
         client_local = docker.from_env()   # connects to docker daemon
         base_url = "ssh://darpa@{}".format(ip)
-        client_remote = docker.DockerClient(base_url=base_url, use_ssh_client=False)
+        # client_remote = docker.DockerClient(base_url=base_url, use_ssh_client=False)
 
-        client = client_remote
+        client = client_local
 
         self.container = client.containers.run(
             image="gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration",
@@ -380,7 +380,7 @@ class DynaSim:
         if self.container:
             # stop the docker container
             self.container.stop()  # default time for stopping: 10 secs
-            self.container.remove()
+            # self.container.remove()
             self.first_observation = False
             self.tick = 0
             self.list_ms = []
