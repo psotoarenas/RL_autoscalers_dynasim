@@ -6,3 +6,4 @@ docker~=5.0.0
 shortuuid~=1.0.1
 stable-baselines3[extra]
 gym
+wandb
