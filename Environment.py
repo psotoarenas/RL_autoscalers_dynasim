@@ -118,6 +118,8 @@ class DynaSimEnv(gym.Env):
             done = True
             # hard penalization
             reward = -100
+            # the simulation is going to be restarted, print the accumulated steps
+            base_logger.info(f"Total steps: {self.total_steps}")
 
         self.acc_reward += reward
         base_logger.info(f"Reward: {reward}")
@@ -158,7 +160,6 @@ class DynaSimEnv(gym.Env):
             pass
 
         base_logger.info("Environment Reset")
-        base_logger.info(f"Total steps: {self.total_steps}")
         self.current_step = 0
         self.prev_state = self._next_observation()
         return self.prev_state
