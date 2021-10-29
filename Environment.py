@@ -40,6 +40,7 @@ class DynaSimEnv(gym.Env):
 
         # initialize timesteps
         self.current_step = 0
+        self.total_steps = 0
         self.acc_reward = 0
         self.prev_state = None
 
@@ -70,7 +71,6 @@ class DynaSimEnv(gym.Env):
     def step(self, action):
 
         base_logger.info(f"Step: {self.current_step}")
-        # print(f"Step: {self.current_step}")
 
         meaning = act_2_meaning[action]
         base_logger.info(f"Action: {action}, {meaning}")
@@ -79,6 +79,7 @@ class DynaSimEnv(gym.Env):
         self._take_action(action)
 
         self.current_step += 1
+        self.total_steps += 1
 
         # when the next report is ready EnvironmentCommunicator.py will set report_ready to True
         # block the code execution until the report is received
@@ -157,6 +158,7 @@ class DynaSimEnv(gym.Env):
             pass
 
         base_logger.info("Environment Reset")
+        base_logger.info(f"Total steps: {self.total_steps}")
         self.current_step = 0
         self.prev_state = self._next_observation()
         return self.prev_state
