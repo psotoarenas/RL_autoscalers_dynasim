@@ -11,9 +11,11 @@ import shortuuid
 
 
 class DynaSim:
-    def __init__(self, mode):
+    def __init__(self, mode, push, pull):
         # communicator side
-        self._communicator = Communicator(5556, 5557)
+        self.push_socket = push
+        self.pull_socket = pull
+        self._communicator = Communicator(self.pull_socket, self.push_socket)
         self._communicator.add_notifier(lambda m: self.handle_message(m))
         self.timemanager = TimeManagement()
         self.ro_pid = ""
@@ -355,6 +357,8 @@ class DynaSim:
                        "tickspersecond={}".format(tick_freq),
                        "IP_PYTHON={}".format(ip),
                        "reportticks={}".format(report_ticks),
+                       "pull_socket={}".format(self.pull_socket),
+                       "push_socket={}".format(self.push_socket),
                        "separate_ra=0"]
         client_local = docker.from_env()   # connects to docker daemon
         base_url = "ssh://darpa@{}".format(ip)
@@ -363,11 +367,11 @@ class DynaSim:
         client = client_local
 
         self.container = client.containers.run(
-            image="gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration",
+            image="gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:dynamic_ports",
             environment=environment,
             # network='host',
             hostname="docker-simulation.localdomain",
-            ports={'5556/tcp': 5556},
+            # ports={'5556/tcp': 5556},
             auto_remove=False,
             detach=True,
             name="dynasim",

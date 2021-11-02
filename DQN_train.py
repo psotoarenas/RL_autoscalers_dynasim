@@ -20,6 +20,8 @@ parser.add_argument('--sim_length', default=20000, type=int, help='Number of tic
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
+parser.add_argument('--push', default='5557', help='ZMQ push port')
+parser.add_argument('--pull', default='5556', help='ZMQ pull port')
 
 args = parser.parse_args()
 
@@ -65,7 +67,13 @@ os.makedirs(results_dir, exist_ok=True)
 # Create and wrap the environment.
 ########################################################################################################################
 
-env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks, mode='train')
+env = DynaSimEnv(sim_length=sim_length,
+                 ai_ip=args.ip,
+                 ticks=args.ticks_per_second,
+                 report=args.report_ticks,
+                 mode='train',
+
+                 )
 # wrap it
 env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 
