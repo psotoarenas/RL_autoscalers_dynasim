@@ -72,7 +72,8 @@ env = DynaSimEnv(sim_length=sim_length,
                  ticks=args.ticks_per_second,
                  report=args.report_ticks,
                  mode='train',
-
+                 pull=args.pull,
+                 push=args.push,
                  )
 # wrap it
 env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
