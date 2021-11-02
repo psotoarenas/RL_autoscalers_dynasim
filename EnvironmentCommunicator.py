@@ -357,8 +357,8 @@ class DynaSim:
                        "tickspersecond={}".format(tick_freq),
                        "IP_PYTHON={}".format(ip),
                        "reportticks={}".format(report_ticks),
-                       "pull_socket={}".format(self.pull_socket),
-                       "push_socket={}".format(self.push_socket),
+                       "pull_port={}".format(self.pull_socket),
+                       "push_port={}".format(self.push_socket),
                        "separate_ra=0"]
         port_map = {f'{self.pull_socket}/tcp': self.pull_socket}
         print(port_map)
@@ -371,9 +371,9 @@ class DynaSim:
         self.container = client.containers.run(
             image="gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:dynamic_ports",
             environment=environment,
-            # network='host',
-            hostname="docker-simulation.localdomain",
-            ports=port_map,
+            network='host',
+            # hostname="docker-simulation.localdomain",
+            # ports=port_map,
             auto_remove=False,
             detach=True,
             # name="dynasim",

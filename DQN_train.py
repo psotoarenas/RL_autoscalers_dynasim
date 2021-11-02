@@ -21,7 +21,7 @@ parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per s
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--push', default=5557, type=int, help='ZMQ push port')
-parser.add_argument('--pull', default=5557, type=int, help='ZMQ pull port')
+parser.add_argument('--pull', default=5556, type=int, help='ZMQ pull port')
 
 args = parser.parse_args()
 
