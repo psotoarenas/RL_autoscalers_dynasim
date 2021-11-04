@@ -361,7 +361,6 @@ class DynaSim:
                        "push_port={}".format(self.push_socket),
                        "separate_ra=0"]
         port_map = {f'{self.pull_socket}/tcp': self.pull_socket}
-        print(port_map)
         client_local = docker.from_env()   # connects to docker daemon
         base_url = "ssh://darpa@{}".format(ip)
         # client_remote = docker.DockerClient(base_url=base_url, use_ssh_client=False)

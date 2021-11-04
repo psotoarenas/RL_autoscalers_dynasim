@@ -8,19 +8,19 @@ import os
 import sys
 import base_logger
 import wandb
-from wandb.integration.sb3 import WandbCallback
 
 ########################################################################################################################
 # Command line arguments.
 ########################################################################################################################
 
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
-# parser.add_argument('--timesteps', default=10000, type=int, help='Number of interactions for training agent')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--run_id', default='psotoarenas/DynamicSIM-RL/<run_id>', help='WANDB run_id')
+parser.add_argument('--push', default=5557, type=int, help='ZMQ push port')
+parser.add_argument('--pull', default=5556, type=int, help='ZMQ pull port')
 
 args = parser.parse_args()
 
@@ -33,7 +33,7 @@ agent_name = "DQN"
 # every incoming report is considered an interaction with the simulator. Therefore, the simulation length (in ticks)
 # should be set by the number of timesteps (interactions with the simulator) and the number of report ticks.
 # simulation length should be longer than the number of timesteps (train or evaluation) to gracefully finish the process
-timesteps = 172800
+timesteps = 172800  # fixed to test with an unseen trace (last 172800 seconds of the workload trace)
 
 sim_length = args.sim_length
 if not (sim_length >= (timesteps + 2) * args.report_ticks):
@@ -66,7 +66,14 @@ os.makedirs(results_dir, exist_ok=True)
 # Create and wrap the environment.
 ########################################################################################################################
 
-env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks, mode='test')
+env = DynaSimEnv(sim_length=sim_length,
+                 ai_ip=args.ip,
+                 ticks=args.ticks_per_second,
+                 report=args.report_ticks,
+                 mode='test',
+                 pull=args.pull,
+                 push=args.push,
+                 )
 # wrap it
 env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 
