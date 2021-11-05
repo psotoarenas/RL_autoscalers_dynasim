@@ -135,8 +135,9 @@ agent.save(os.path.join(results_dir, agent_name))
 agent.save(os.path.join(wandb.run.dir, agent_name+".zip"))
 wandb.config.execution_time = end - start
 wandb.save("Environment.py")
-print(f"Logger: {base_logger.file_handler.baseFilename}")
-wandb.save(base_logger.file_handler.baseFilename)
+logger = base_logger.file_handler.baseFilename.split("/")[-1]
+print(f"Logger: {logger}")
+wandb.save(logger)
 print("Training procedure finished")
 
 # kill simulation before you leave
