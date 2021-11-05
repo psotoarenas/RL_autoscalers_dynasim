@@ -102,7 +102,7 @@ wandb.config.update(args)
 wandb.config.update({"run_id": wandb.run.id})
 
 # to replace the agent, simply invoke another method
-agent = DQN(config["policy_type"], env, verbose=1)
+agent = DQN(config["policy_type"], env, verbose=1, tensorboard_log=f"runs/{run.id}")
 
 ########################################################################################################################
 # Train Agent.
@@ -115,7 +115,7 @@ start = time.time()
 # (episode termination). Thus, we might have episodes of different length
 # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
 # save to memory buffer and repeat for the number of timesteps.
-callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path="models", verbose=2)
+callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"models/{run.id}", verbose=2)
 agent.learn(total_timesteps=timesteps, callback=callback)
 
 end = time.time()
