@@ -42,7 +42,6 @@ if not (sim_length >= (timesteps + 2) * args.report_ticks):
              "At least sim_length = (timesteps + 2) * report_ticks")
 # logger
 base_logger.default_extra = {'app_name': f'{agent_name}', 'node': 'localhost'}
-print(f"Logger: {base_logger.file_handler.baseFilename}")
 
 ########################################################################################################################
 # Create dir for saving results

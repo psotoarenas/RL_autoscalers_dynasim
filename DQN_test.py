@@ -158,7 +158,9 @@ os.rename("python.traces", os.path.join(results_dir, results_filename))
 # upload data to wandb server
 wandb.config.execution_time = end - start
 wandb.save("Environment.py")
-# TODO: verify if longer testings are saved or the python.traces must be uploaded too.
+logger = base_logger.file_handler.baseFilename.split("/")[-1]
+print(f"Logger: {logger}")
+wandb.save(logger)
 print("Testing procedure finished")
 
 # kill simulation before you leave
