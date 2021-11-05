@@ -42,6 +42,7 @@ if not (sim_length >= (timesteps + 2) * args.report_ticks):
              "At least sim_length = (timesteps + 2) * report_ticks")
 # logger
 base_logger.default_extra = {'app_name': f'{agent_name}', 'node': 'localhost'}
+print(f"Logger: {base_logger.file_handler.baseFilename}")
 
 ########################################################################################################################
 # Create dir for saving results
@@ -134,7 +135,8 @@ agent.save(os.path.join(results_dir, agent_name))
 agent.save(os.path.join(wandb.run.dir, agent_name+".zip"))
 wandb.config.execution_time = end - start
 wandb.save("Environment.py")
-# TODO: verify if longer trainings are saved or the python.traces must be uploaded too.
+print(f"Logger: {base_logger.file_handler.baseFilename}")
+wandb.save(base_logger.file_handler.baseFilename)
 print("Training procedure finished")
 
 # kill simulation before you leave

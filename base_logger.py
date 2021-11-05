@@ -1,4 +1,5 @@
 import logging
+import time
 default_extra = {}
 timemanager = None
 
@@ -7,7 +8,8 @@ logger = logging.getLogger('basic-logger')
 logger.setLevel(logging.DEBUG)
 
 # Create a file handler
-file_handler = logging.FileHandler('python.traces', mode='w')
+timestr = time.strftime("%Y%m%d-%H%M%S")
+file_handler = logging.FileHandler(f'python-{timestr}.traces', mode='w')
 formatter = logging.Formatter('<0.0.0>|%(app_name)s|Python|%(sim_time)s|%(asctime)s|%(node)s|uncategorized|4|%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
 file_handler.setFormatter(formatter)
 
