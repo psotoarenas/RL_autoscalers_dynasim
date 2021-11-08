@@ -149,12 +149,6 @@ print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
 # Save your Results and clean.
 ########################################################################################################################
 
-# Rename python.traces as exp - agent_name - testing steps - report ticks - experiment
-results_filename = f"{agent_name}-{timesteps}-{args.report_ticks}-{last_exp + 1}.traces"
-
-print(f"Saving results as {results_filename}")
-os.rename("python.traces", os.path.join(results_dir, results_filename))
-
 # upload data to wandb server
 wandb.config.execution_time = end - start
 wandb.save("Environment.py")
