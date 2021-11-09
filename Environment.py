@@ -89,29 +89,25 @@ class DynaSimEnv(gym.Env):
         self.state = self._next_observation()
         cpu, latency, overflow, num_ms = self.state
 
-        _, prev_latency, _, prev_ms = self.prev_state
+        _, prev_latency, _, _ = self.prev_state
 
         # case reward
-        # if latency remains above threshold, agent is always penalized
-        # if prev_latency > self.threshold and latency > self.threshold:
-        #     reward = -1
-        # except if it increases the MS to get below the threshold
+        # if it increases the MS to get below the threshold
         if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
             reward = 1
-        # # if prev latency is below threshold, but increases the MS, the agent is penalized
-        # elif prev_latency <= self.threshold and action == self.INCREASE and latency <= self.threshold:
-        #     reward = -1
-        # # if prev latency is below threshold, but decreases the MS and gets above the thd, the agent is penalized
-        # elif prev_latency <= self.threshold and action == self.DECREASE and latency > self.threshold:
-        #     reward = -1
-        # # if prev latency is below threshold, but decreases the MS while maintaining below thd, the agent is rewarded
+        # if the agent maintains the latency below the thd by decreasing or doing nothing, the agent is rewarded
         elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
             reward = 1
+        elif prev_latency <= self.threshold and action == self.NOTHING and latency <= self.threshold:
+            reward = 1
+        # except if maintains the latency below the thd by incrementing the number of MSs
+        elif prev_latency <= self.threshold and action == self.INCREASE and latency <= self.threshold:
+            reward = -1
         else:
-            reward = 0   # other non-considered cases
+            reward = 0   # other non-considered cases, for example if the latency is above the thd
 
-        # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the overflow is greater than 200.,
-        # or the peak latency is above 3 seconds end episode and reset simulation
+        # if the agent creates more than 30 MSs (one server is limited to 53 MS) or the peak latency is above 2 seconds
+        # end episode and reset simulation
         done = False
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
         if num_ms > 30 or latency > 2. :
