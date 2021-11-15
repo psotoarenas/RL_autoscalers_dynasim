@@ -92,17 +92,9 @@ class DynaSimEnv(gym.Env):
         _, prev_latency, _, _ = self.prev_state
 
         # case reward
-        # if it increases the MS to get below the threshold
-        if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
+        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
+                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
             reward = 1
-        # if the agent maintains the latency below the thd by decreasing or doing nothing, the agent is rewarded
-        elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
-            reward = 1
-        elif prev_latency <= self.threshold and action == self.NOTHING and latency <= self.threshold:
-            reward = 1
-        # except if maintains the latency below the thd by incrementing the number of MSs
-        elif prev_latency <= self.threshold and action == self.INCREASE and latency <= self.threshold:
-            reward = -1
         else:
             reward = 0   # other non-considered cases, for example if the latency is above the thd
 
