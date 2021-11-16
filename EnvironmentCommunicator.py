@@ -48,14 +48,11 @@ class DynaSim:
         self.mode = mode
         if self.mode == "train":
             self.tick = 0
-            # with open('trafficTrace.csv') as f:
-            #     self.job_list = [int(el) for el in f.read().split()]
         else:
             self.tick = 432000
-            # with open('trafficTrace.csv') as f:
-            # with open('../trafficTrace.csv') as f:
-            #     self.job_list = [int(el) for el in f.read().split()]
-        random.seed(7)
+        with open('trafficTrace.csv') as f:
+            self.job_list = [int(el) for el in f.read().split()]
+        # random.seed(7)
 
 
     def run(self):
@@ -298,19 +295,21 @@ class DynaSim:
         return toSimMessage
 
     def compute_traffic(self):
-        # compute the traffic that is sent to the simulator
-        offset = 1616745600  # 9:00 March 25, 2021
-        timeOfDay = offset + self.tick
-        new_params = max(int(300.0 * (0.9 + 0.1 * np.cos(np.pi * timeOfDay / 864000.0)) *
-                             (4.0 + 1.2 * np.sin(2.0 * np.pi * timeOfDay / 86400.0) -
-                              0.6 * np.sin(6.0 * np.pi * timeOfDay / 86400.0) +
-                              0.02 * (np.sin(503.0 * np.pi * timeOfDay / 86400.0) -
-                                      np.sin(709.0 * np.pi * timeOfDay / 86400.0) * random.expovariate(1.0))) +
-                             self.memory + 5.0 * random.gauss(0.0, 1.0)), 0)
-        if random.random() < 1e-4:
-            self.memory += 200.0 * random.expovariate(1.0)
-        else:
-            self.memory *= 0.99
+        # # compute the traffic that is sent to the simulator
+        # offset = 1616745600  # 9:00 March 25, 2021
+        # timeOfDay = offset + self.tick
+        # new_params = max(int(300.0 * (0.9 + 0.1 * np.cos(np.pi * timeOfDay / 864000.0)) *
+        #                      (4.0 + 1.2 * np.sin(2.0 * np.pi * timeOfDay / 86400.0) -
+        #                       0.6 * np.sin(6.0 * np.pi * timeOfDay / 86400.0) +
+        #                       0.02 * (np.sin(503.0 * np.pi * timeOfDay / 86400.0) -
+        #                               np.sin(709.0 * np.pi * timeOfDay / 86400.0) * random.expovariate(1.0))) +
+        #                      self.memory + 5.0 * random.gauss(0.0, 1.0)), 0)
+        # if random.random() < 1e-4:
+        #     self.memory += 200.0 * random.expovariate(1.0)
+        # else:
+        #     self.memory *= 0.99
+        base_logger.info(f"Tick: {self.tick}")
+        new_params = self.job_list[(self.tick + 1) % len(self.job_list)]
         self.tick += 1
         # add if it is necessary to repeat the same trace.
         if self.mode == "train" and self.tick == 86399:
@@ -365,12 +364,12 @@ class DynaSim:
         self.container = client.containers.run(
             image="gitlab.ilabt.imec.be:4567/idlab-nokia/dynamicsim:server_migration",
             environment=environment,
-            # network='host',
-            hostname="docker-simulation.localdomain",
-            ports={'5556/tcp': 5556},
+            network='host',
+            # hostname="docker-simulation.localdomain",
+            # ports={'5556/tcp': 5556},
             auto_remove=False,
             detach=True,
-            name="dynasim",
+            # name="dynasim",
             stdin_open=True,
             tty=True,
         )  # if detach=True, the command returns a container object
