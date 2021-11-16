@@ -5,6 +5,7 @@ import docker
 import sys
 import base_logger
 import os
+import wandb
 
 ########################################################################################################################
 # Define constants.
@@ -21,14 +22,15 @@ tolerance = 0.2
 ########################################################################################################################
 
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
-parser.add_argument('--timesteps_eval', default=10000, type=int, help='Number of interactions for evaluating agent')
 parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
 parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
-parser.add_argument('--agent_name', default='rule-dynasim', help='Agent Name')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
+parser.add_argument('--push', default=5557, type=int, help='ZMQ push port')
+parser.add_argument('--pull', default=5556, type=int, help='ZMQ pull port')
 
 args = parser.parse_args()
+agent_name = "THD"
 
 ########################################################################################################################
 # Train Agent during timesteps_train and simulation length in ticks terms
@@ -37,20 +39,20 @@ args = parser.parse_args()
 # every incoming report is considered an interaction with the simulator. Therefore, the simulation length (in ticks)
 # should be set by the number of timesteps (interactions with the simulator) and the number of report ticks.
 # simulation length should be longer than the number of timesteps (train or evaluation) to gracefully finish the process
-timesteps = args.timesteps_eval
+timesteps = 172800  # fixed to test with an unseen trace (last 172800 seconds of the workload trace)
 
 sim_length = args.sim_length
 if not (sim_length >= (timesteps + 2) * args.report_ticks):
     sys.exit("Simulation ticks must be larger than the timesteps for training or testing. "
              "At least sim_length = (timesteps + 2) * report_ticks")
 # logger
-base_logger.default_extra = {'app_name': f'{args.agent_name}', 'node': 'localhost'}
+base_logger.default_extra = {'app_name': f'{agent_name}', 'node': 'localhost'}
 
 ########################################################################################################################
 # Create dir for saving results
 ########################################################################################################################
 
-results_dir = f"exp-{args.agent_name}-{timesteps}-{args.report_ticks}"
+results_dir = f"{agent_name}-{timesteps}-{args.report_ticks}"
 nb_exp = []
 for folder_name in os.listdir('./'):
     if folder_name.startswith(results_dir):
@@ -69,11 +71,37 @@ os.makedirs(results_dir, exist_ok=True)
 # Create and wrap the environment.
 ########################################################################################################################
 
-env = DynaSimEnv(sim_length=sim_length, ai_ip=args.ip, ticks=args.ticks_per_second, report=args.report_ticks)
+env = DynaSimEnv(sim_length=sim_length,
+                 ai_ip=args.ip,
+                 ticks=args.ticks_per_second,
+                 report=args.report_ticks,
+                 mode='test',
+                 pull=args.pull,
+                 push=args.push,
+                 )
 
 ########################################################################################################################
 # Deploy Agent.
 ########################################################################################################################
+
+config = {
+    "policy_type": "MlpPolicy",
+    "total_timesteps": timesteps,
+    "env_name": "Dynasim",
+    "agent_name": agent_name,
+    "mode": "test"
+}
+
+run = wandb.init(
+    project="DynamicSIM-RL",
+    config=config,
+    sync_tensorboard=False,  # auto-upload sb3's tensorboard metrics
+    monitor_gym=False,  # auto-upload the videos of agents playing the game
+    save_code=True,  # optional
+    )
+
+wandb.config.update(args)
+wandb.config.update({"run_id": wandb.run.id})
 
 base_logger.info(f"Mode: testing for {timesteps} timesteps")
 start = time.time()
@@ -102,22 +130,17 @@ end = time.time()
 base_logger.info(f"Agent end testing. Elapsed time: {end - start}")
 
 ########################################################################################################################
-# Clean before you leave
+# Save your results and clean.
 ########################################################################################################################
+
+# upload data to wandb server
+wandb.config.execution_time = end - start
+wandb.save("Environment.py")
+logger = base_logger.file_handler.baseFilename.split("/")[-1]
+print(f"Logger: {logger}")
+wandb.save(logger)
+print("Testing procedure finished")
 
 # kill simulation before you leave
-container_id = info["container_id"]
-client = docker.from_env()
-container = client.containers.get(container_id)
-print(f"Killing container: {container_id}")
-container.stop()  # default time for stopping: 10 secs
-container.remove()
-
-########################################################################################################################
-# Save your Results.
-########################################################################################################################
-
-# Rename python.traces as exp - agent_type - total timesteps - report ticks - experiment
-results_filename = f"exp-{args.agent_name}-{timesteps}-{args.report_ticks}-{last_exp + 1}.traces"
-print(f"Saving results as {results_filename}")
-os.rename("python.traces", os.path.join(results_dir, results_filename))
+run.finish()
+env.close()
