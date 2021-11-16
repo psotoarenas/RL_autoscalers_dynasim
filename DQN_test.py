@@ -8,7 +8,6 @@ import os
 import sys
 import base_logger
 import wandb
-from wandb.integration.sb3 import WandbCallback
 
 ########################################################################################################################
 # Command line arguments.
