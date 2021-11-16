@@ -92,17 +92,18 @@ class DynaSimEnv(gym.Env):
         _, prev_latency, _, _ = self.prev_state
 
         # case reward
-        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
-                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
+        if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
+            reward = 1
+        elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
             reward = 1
         else:
-            reward = 0   # other non-considered cases, for example if the latency is above the thd
+            reward = 0  # other non-considered cases
 
-        # if the agent creates more than 30 MSs (one server is limited to 53 MS) or the peak latency is above 2 seconds
-        # end episode and reset simulation
+        # if the agent creates more than 30 MSs (one server is limited to 53 MS) or the
+        # peak latency is above 2 seconds end episode and reset simulation
         done = False
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
-        if num_ms > 30 or latency > 2. :
+        if num_ms > 30 or latency > 2.:
             done = True
             # hard penalization
             reward = -100
