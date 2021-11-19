@@ -96,6 +96,8 @@ class DynaSimEnv(gym.Env):
             reward = 1
         elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
             reward = 1
+        elif prev_latency <= self.threshold and action == self.INCREASE and latency <= self.threshold:
+            reward = -1
         else:
             reward = 0  # other non-considered cases
 
