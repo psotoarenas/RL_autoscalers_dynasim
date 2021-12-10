@@ -315,8 +315,8 @@ class DynaSim:
         new_params = self.job_list[(self.tick + 1) % len(self.job_list)]
         self.tick += 1
         # add if it is necessary to repeat the same trace.
-        if self.mode == "train" and self.tick == 86399:
-            self.tick = 0
+        # if self.mode == "train" and self.tick == 86399:
+        #     self.tick = 0
         self.size_params[0] = new_params
         base_logger.info("Traffic: {}".format(new_params))
         toSimMessage = x_pb2.ToSimulationMessage()

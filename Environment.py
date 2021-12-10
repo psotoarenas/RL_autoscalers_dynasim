@@ -102,13 +102,16 @@ class DynaSimEnv(gym.Env):
             reward = 0  # other non-considered cases
 
         # if the agent creates more than 30 MSs (one server is limited to 53 MS) or the
-        # peak latency is above 2 seconds end episode and reset simulation
-        done = False
+        # peak latency is above 2 seconds, penalize harder
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
         if num_ms > 30 or latency > 2.:
-            done = True
             # hard penalization
-            reward = -100
+            reward = -10
+
+        done = False
+        # restart the simulation if the number of timesteps is reached
+        if self.current_step % 3600 == 0:
+            done = True
             # the simulation is going to be restarted, print the accumulated steps
             base_logger.info(f"Total steps: {self.total_steps}")
 
