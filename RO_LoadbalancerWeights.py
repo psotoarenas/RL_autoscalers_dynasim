@@ -83,19 +83,43 @@ class RO_LoadbalancerWeight:
         active_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'RUNNING']
         booting_ms = [x for x in self.list_ms if 'MS' in x.name and x.state == 'BOOTING']
 
-        if self.loadbalancer.last_update == self.timemanager.getCurrentSimulationTick():
-            for MSName, weight_state in self.loadbalancer.weights_state.items():
-                print("{} last weight update state: {}, current weight: {}".format(MSName, weight_state, self.loadbalancer.weights[MSName]))
+        if self.loadbalancer is not None:
+            if self.loadbalancer.last_update == self.timemanager.getCurrentSimulationTick():
+                for MSName, weight_state in self.loadbalancer.weights_state.items():
+                    print("{} last weight update state: {}, current weight: {}".format(MSName, weight_state, self.loadbalancer.weights[MSName]))
 
         tick = self.timemanager.getCurrentSimulationTick()
         if tick == 1:
+            actor_name = "Server_2"
+            parameters = [300, 10, 16000]
+
+            ParameterMessages = self.create_parameter_message(parameters)
+            toSimMessage = x_pb2.ToSimulationMessage()
+            create_actor = x_pb2.CreateActor()
+            message = x_pb2.CreateGenericActor()
+            message.actor_type = 'class_Server'
+            message.name = actor_name
+            message.parameters.extend(ParameterMessages)
+            create_actor.generic_actor.CopyFrom(message)
+            toSimMessage.create_actor.CopyFrom(create_actor)
+            messages_to_send.append(toSimMessage)
+            print("Create new Server: {}".format(actor_name))
+        if tick == 3:
+            actor_name = "LoadBalancer_1"
+            parameters = ["equal"]
+            new_actor = self.create_new_microservice(actor_name, actor_type='class_LoadBalancerService',
+                                                     parameters=parameters,
+                                                     incoming_actors=["Client"], outgoing_actors=[],
+                                                     server="Server_2")
+            messages_to_send.append(new_actor)
+
             for i in range(8):
                 actor_name = "MS_{}".format(shortuuid.ShortUUID().random(length=8))
                 parameters = [1.0, 4.0, 1]
                 new_actor = self.create_new_microservice(actor_name, actor_type='class_SimpleMicroservice',
                                                          parameters=parameters,
-                                                         incoming_actors=[self.loadbalancer.name], outgoing_actors=[],
-                                                         server=self.get_best_server())
+                                                         incoming_actors=["LoadBalancer_1"], outgoing_actors=[],
+                                                         server="Server_2")
                 base_logger.info("New MS: {}".format(actor_name))
                 messages_to_send.append(new_actor)
 
