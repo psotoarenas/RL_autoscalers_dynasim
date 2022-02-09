@@ -50,7 +50,8 @@ class DynaSimEnv(gym.Env):
         self.target_cpu = 0.75
         # define a tolerance of 20% the target
         self.tolerance = 0.2
-        self.threshold = (1 + self.tolerance) * self.target_latency
+        self.lat_threshold = (1 + self.tolerance) * self.target_latency
+        self.cpu_threshold = (1 + self.tolerance) * self.target_cpu
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -91,29 +92,30 @@ class DynaSimEnv(gym.Env):
 
         _, prev_latency, _, _ = self.prev_state
 
-        # case reward
-        if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
+        # reward function
+        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
+                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
             reward = 1
-        elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
-            reward = 1
-        elif prev_latency <= self.threshold and action == self.INCREASE and latency <= self.threshold:
-            reward = -1
         else:
-            reward = 0  # other non-considered cases
+            reward = 0
 
-        # if the agent creates more than 30 MSs (one server is limited to 53 MS) or the
+        # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
         # peak latency is above 2 seconds, penalize harder
-        # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
-        if num_ms > 30 or latency > 2.:
-            # hard penalization
-            reward = -10
-
         done = False
-        # restart the simulation if the number of timesteps is reached
-        if self.current_step % 3600 == 0:
+        # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
+        if num_ms > 20 or latency > 2.:
+            # hard penalization
+            reward = -100
             done = True
             # the simulation is going to be restarted, print the accumulated steps
             base_logger.info(f"Total steps: {self.total_steps}")
+
+        # done = False
+        # # restart the simulation if the number of timesteps is reached
+        # if self.current_step % 3600 == 0:
+        #     done = True
+        #     # the simulation is going to be restarted, print the accumulated steps
+        #     base_logger.info(f"Total steps: {self.total_steps}")
 
         self.acc_reward += reward
         base_logger.info(f"Reward: {reward}")
