@@ -52,6 +52,8 @@ class DynaSimEnv(gym.Env):
         self.tolerance = 0.2
         self.lat_threshold = (1 + self.tolerance) * self.target_latency
         self.cpu_threshold = (1 + self.tolerance) * self.target_cpu
+        self.violations = []
+        self.vnf = []
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -93,11 +95,14 @@ class DynaSimEnv(gym.Env):
         _, prev_latency, _, _ = self.prev_state
 
         # reward function
-        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
-                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
-            reward = 1
+        if latency > self.target_latency:
+            self.violations.append(1.)
         else:
-            reward = 0
+            self.violations.append(0.)
+
+        cost = 0.5 * sum(self.violations) / self.current_step + 0.5 * sum(self.vnf) / self.current_step
+
+        reward = -cost
 
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
         # peak latency is above 2 seconds, penalize harder
