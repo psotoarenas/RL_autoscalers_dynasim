@@ -91,7 +91,7 @@ config = {
 }
 
 run = wandb.init(
-    project="DynamicSIM-RL",
+    project="RL_autoscalers",
     config=config,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
