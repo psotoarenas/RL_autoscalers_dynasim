@@ -4,7 +4,6 @@ from EnvironmentCommunicator import DynaSim
 import base_logger
 
 import numpy as np
-import pandas as pd
 import threading
 
 act_2_meaning = {
@@ -53,8 +52,6 @@ class DynaSimEnv(gym.Env):
         self.tolerance = 0.2
         self.lat_threshold = (1 + self.tolerance) * self.target_latency
         self.cpu_threshold = (1 + self.tolerance) * self.target_cpu
-        self.violations = []
-        self.vnf = []
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -96,23 +93,11 @@ class DynaSimEnv(gym.Env):
         _, prev_latency, _, _ = self.prev_state
 
         # reward function
-        if latency > self.lat_threshold:
-            self.violations.append(1.)
+        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
+                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
+            reward = 1
         else:
-            self.violations.append(0.)
-
-        self.vnf.append(num_ms)
-
-        # moving average
-        violations = pd.Series(self.violations)
-        vnf = pd.Series(self.vnf)
-
-        ma_violations = violations.rolling(window=3).mean().fillna(0)
-        ma_vnf = vnf.rolling(window=3).mean().fillna(0)
-
-        cost = ma_violations.iloc[-1] + ma_vnf.iloc[-1]
-
-        reward = -cost
+            reward = 0
 
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
         # peak latency is above 2 seconds, penalize harder
@@ -159,8 +144,6 @@ class DynaSimEnv(gym.Env):
 
     def reset(self):
         self.acc_reward = 0
-        self.violations = []
-        self.vnf = []
         existing_container = self.dynasim.restart_simulation()
 
         if not existing_container:
