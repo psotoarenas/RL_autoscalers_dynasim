@@ -4,6 +4,7 @@ from EnvironmentCommunicator import DynaSim
 import base_logger
 
 import numpy as np
+import pandas as pd
 import threading
 
 act_2_meaning = {
@@ -100,7 +101,16 @@ class DynaSimEnv(gym.Env):
         else:
             self.violations.append(0.)
 
-        cost = 0.5 * sum(self.violations) / self.current_step + 0.5 * sum(self.vnf) / self.current_step
+        self.vnf.append(num_ms)
+
+        # moving average
+        violations = pd.Series(self.violations)
+        vnf = pd.Series(self.vnf)
+
+        ma_violations = violations.rolling(window=3).mean().fillna(0)
+        ma_vnf = vnf.rolling(window=3).mean().fillna(0)
+
+        cost = ma_violations + ma_vnf
 
         reward = -cost
 
