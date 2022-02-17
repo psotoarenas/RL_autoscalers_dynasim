@@ -96,7 +96,7 @@ class DynaSimEnv(gym.Env):
         _, prev_latency, _, _ = self.prev_state
 
         # reward function
-        if latency > self.target_latency:
+        if latency > self.lat_threshold:
             self.violations.append(1.)
         else:
             self.violations.append(0.)
@@ -110,7 +110,7 @@ class DynaSimEnv(gym.Env):
         ma_violations = violations.rolling(window=3).mean().fillna(0)
         ma_vnf = vnf.rolling(window=3).mean().fillna(0)
 
-        cost = ma_violations + ma_vnf
+        cost = ma_violations.iloc[-1] + ma_vnf.iloc[-1]
 
         reward = -cost
 
@@ -159,6 +159,8 @@ class DynaSimEnv(gym.Env):
 
     def reset(self):
         self.acc_reward = 0
+        self.violations = []
+        self.vnf = []
         existing_container = self.dynasim.restart_simulation()
 
         if not existing_container:
