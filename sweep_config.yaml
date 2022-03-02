@@ -1,0 +1,9 @@
+program : DQN_train.py
+method : random
+parameters : 
+    learning_rate : 
+        values : [0.0001, 0.001, 0.01, 0.00001]
+    gamma : 
+        values : [0.99, 0.95, 0.9, 0.8]
+    exploration_fraction:
+        values : [0.1, 0.2, 0.3]
