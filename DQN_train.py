@@ -90,7 +90,10 @@ config = {
     "total_timesteps": args.timesteps,
     "env_name": "Dynasim",
     "agent_name": agent_name,
-    "mode": "train"
+    "mode": "train",
+    "learning_rate": args.learning_rate,
+    "gamma": args.gamma,
+    "exploration_fraction" : args.exploration_fraction
 }
 
 run = wandb.init(
