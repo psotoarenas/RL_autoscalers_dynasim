@@ -4,6 +4,7 @@ from EnvironmentCommunicator import DynaSim
 import base_logger
 
 import numpy as np
+import pandas as pd
 import threading
 
 act_2_meaning = {
@@ -25,7 +26,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, ticks, report, mode="train", push=5557, pull=5556):
+    def __init__(self, sim_length, ai_ip, ticks, report, mode="train", push=5557, pull=5556, w_adp=0.2, w_perf=0.6, w_res=0.2):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -50,7 +51,15 @@ class DynaSimEnv(gym.Env):
         self.target_cpu = 0.75
         # define a tolerance of 20% the target
         self.tolerance = 0.2
-        self.threshold = (1 + self.tolerance) * self.target_latency
+        self.lat_threshold = (1 + self.tolerance) * self.target_latency
+        self.cpu_threshold = (1 + self.tolerance) * self.target_cpu
+        self.violations = []
+        self.vnf = []
+        # define weights for the reward function
+        self.w_adp = w_adp
+        self.w_perf = w_perf
+        self.w_res = w_res
+
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -89,18 +98,31 @@ class DynaSimEnv(gym.Env):
         self.state = self._next_observation()
         cpu, latency, overflow, num_ms = self.state
 
-        _, prev_latency, _, _ = self.prev_state
+        _, prev_latency, _, prev_ms = self.prev_state
+
+        # cost function
+        ### adaptation cost
+        if num_ms == prev_ms:
+            adp_cost = 0.
+        else:
+            adp_cost = 1.
+
+        ### performance cost
+        if latency > self.lat_threshold:
+            perf_cost = 1.
+        else:
+            perf_cost = 0.
+
+        ### resource cost
+        res_cost = num_ms - prev_ms
+
+        total_cost = (self.w_adp * adp_cost) + (self.w_perf * perf_cost) + (self.w_res * res_cost)
 
         # reward function
-        if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
-            reward = 1
-        elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
-            reward = 1
-        else:
-            reward = 0  # other non-considered cases
+        reward = - total_cost
 
-        # if the agent creates more than 30 MSs (one server is limited to 53 MS) or the
-        # peak latency is above 2 seconds end episode and reset simulation
+        # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
+        # peak latency is above 2 seconds, penalize harder
         done = False
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
         if num_ms > 20 or latency > 2.:
@@ -109,6 +131,13 @@ class DynaSimEnv(gym.Env):
             done = True
             # the simulation is going to be restarted, print the accumulated steps
             base_logger.info(f"Total steps: {self.total_steps}")
+
+        # done = False
+        # # restart the simulation if the number of timesteps is reached
+        # if self.current_step % 3600 == 0:
+        #     done = True
+        #     # the simulation is going to be restarted, print the accumulated steps
+        #     base_logger.info(f"Total steps: {self.total_steps}")
 
         self.acc_reward += reward
         base_logger.info(f"Reward: {reward}")
@@ -137,6 +166,8 @@ class DynaSimEnv(gym.Env):
 
     def reset(self):
         self.acc_reward = 0
+        self.violations = []
+        self.vnf = []
         existing_container = self.dynasim.restart_simulation()
 
         if not existing_container:
