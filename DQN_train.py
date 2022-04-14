@@ -22,6 +22,9 @@ parser.add_argument('--report_ticks', default=2, type=int, help='How many ticks 
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--push', default=5557, type=int, help='ZMQ push port')
 parser.add_argument('--pull', default=5556, type=int, help='ZMQ pull port')
+parser.add_argument('--w_adp', default=0.2, type=float, help='adaptation weight')
+parser.add_argument('--w_perf', default=0.6, type=float, help='performance weight')
+parser.add_argument('--w_res', default=0.2, type=float, help='resource weight')
 parser.add_argument('--learning_rate', default=0.0001, type=float, help='learning rate')
 parser.add_argument('--gamma', default=0.99, type=float, help='gamma')
 parser.add_argument('--exploration_fraction', default=0.1, type=float, help='exploration fraction')
@@ -77,6 +80,9 @@ env = DynaSimEnv(sim_length=sim_length,
                  mode='train',
                  pull=args.pull,
                  push=args.push,
+                 w_perf=args.w_perf,
+                 w_adp=args.w_adp,
+                 w_res=args.w_res,
                  )
 # wrap it
 env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
@@ -85,37 +91,36 @@ env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 # Create Agent.
 ########################################################################################################################
 
-config = {
-    "policy_type": "MlpPolicy",
-    "total_timesteps": args.timesteps,
-    "env_name": "Dynasim",
-    "agent_name": agent_name,
-    "mode": "train",
-    "learning_rate": args.learning_rate,
-    "gamma": args.gamma,
-    "exploration_fraction" : args.exploration_fraction
-}
-
 run = wandb.init(
     project="RL_autoscalers",
-    config=config,
+    config=args,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
     save_code=True,  # optional
     )
 
-wandb.config.update(args)
-wandb.config.update({"run_id": wandb.run.id})
+wandb.config.update({
+    "policy_type": "MlpPolicy",
+    "total_timesteps": timesteps,
+    "env_name": "Dynasim",
+    "agent_name": agent_name,
+    "mode": "train",
+    "run_id": wandb.run.id
+})
+
+config = wandb.config
+
 
 # to replace the agent, simply invoke another method
 agent = DQN(
-    config["policy_type"], 
-    env, verbose=1, 
-    tensorboard_log=f"runs/{run.id}", 
-    learning_rate=config["learning_rate"], 
-    gamma=config["gamma"], 
-    exploration_fraction=config["exploration_fraction"]
-    )
+    config["policy_type"],
+    env, verbose=1,
+    tensorboard_log=f"runs/{run.id}",
+    learning_rate=config["learning_rate"],
+    gamma=config["gamma"],
+    exploration_fraction=config["exploration_fraction"],
+    learning_starts=0
+)
 
 ########################################################################################################################
 # Train Agent.
