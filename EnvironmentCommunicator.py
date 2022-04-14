@@ -52,7 +52,7 @@ class DynaSim:
             self.tick = 0
         else:
             self.tick = 432000
-        with open('trafficTrace.csv') as f:
+        with open('convergence_trace.csv') as f:
             self.job_list = [int(el) for el in f.read().split()]
         # random.seed(7)
 

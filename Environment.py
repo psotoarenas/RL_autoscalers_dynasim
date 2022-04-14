@@ -43,6 +43,7 @@ class DynaSimEnv(gym.Env):
         self.current_step = 0
         self.total_steps = 0
         self.acc_reward = 0
+        self.num_restarts = 0
         self.prev_state = None
 
         # define target latency = 20ms
@@ -59,7 +60,6 @@ class DynaSimEnv(gym.Env):
         self.w_adp = w_adp
         self.w_perf = w_perf
         self.w_res = w_res
-
 
         # parameters to start simulation
         self.ip = ai_ip
@@ -127,10 +127,12 @@ class DynaSimEnv(gym.Env):
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
         if num_ms > 20 or latency > 2.:
             # hard penalization
-            reward = -100
+            reward = -100.
             done = True
             # the simulation is going to be restarted, print the accumulated steps
             base_logger.info(f"Total steps: {self.total_steps}")
+            # update the numer of restarts
+            self.num_restarts += 1
 
         # done = False
         # # restart the simulation if the number of timesteps is reached
@@ -190,3 +192,4 @@ class DynaSimEnv(gym.Env):
 
     def close(self):
         self.dynasim.stop_simulation()
+        base_logger.info(f"Number of restarts {self.num_restarts}")

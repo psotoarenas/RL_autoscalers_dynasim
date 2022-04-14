@@ -70,25 +70,7 @@ results_dir = results_dir + "-" + str(last_exp + 1)
 os.makedirs(results_dir, exist_ok=True)
 
 ########################################################################################################################
-# Create and wrap the environment.
-########################################################################################################################
-
-env = DynaSimEnv(sim_length=sim_length,
-                 ai_ip=args.ip,
-                 ticks=args.ticks_per_second,
-                 report=args.report_ticks,
-                 mode='train',
-                 pull=args.pull,
-                 push=args.push,
-                 w_perf=args.w_perf,
-                 w_adp=args.w_adp,
-                 w_res=args.w_res,
-                 )
-# wrap it
-env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
-
-########################################################################################################################
-# Create Agent.
+# Configure wandb
 ########################################################################################################################
 
 run = wandb.init(
@@ -110,6 +92,27 @@ wandb.config.update({
 
 config = wandb.config
 
+########################################################################################################################
+# Create and wrap the environment.
+########################################################################################################################
+
+env = DynaSimEnv(sim_length=sim_length,
+                 ai_ip=args.ip,
+                 ticks=args.ticks_per_second,
+                 report=args.report_ticks,
+                 mode='train',
+                 pull=args.pull,
+                 push=args.push,
+                 w_perf=args.w_perf,
+                 w_adp=args.w_adp,
+                 w_res=args.w_res,
+                 )
+# wrap it
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
+
+########################################################################################################################
+# Create Agent.
+########################################################################################################################
 
 # to replace the agent, simply invoke another method
 agent = DQN(
@@ -119,7 +122,7 @@ agent = DQN(
     learning_rate=config["learning_rate"],
     gamma=config["gamma"],
     exploration_fraction=config["exploration_fraction"],
-    learning_starts=0
+    learning_starts=0 # starts leaarning right away, instead of waiting 50.000 steps
 )
 
 ########################################################################################################################
