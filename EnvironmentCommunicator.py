@@ -229,7 +229,7 @@ class DynaSim:
         #         # print(new_actor)
         #         messages_to_send.append(toSimMessage)
         #         print("Create new Server: {}".format(actor_name))
-        return peak_latency, self.number_of_ms
+        return peak_latency, self.number_of_ms, cpu_usage
 
     def getUpdate(self):
         # form an updated list of messages. This includes messages from the agent

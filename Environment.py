@@ -96,9 +96,9 @@ class DynaSimEnv(gym.Env):
 
         # observe the effect of the action on the simulation status, get the next state
         self.state = self._next_observation()
-        latency, num_ms = self.state
+        latency, num_ms, cpu = self.state
 
-        prev_latency, prev_ms = self.prev_state
+        prev_latency, prev_ms, prev_cpu = self.prev_state
 
         # cost function
         ### adaptation cost
@@ -119,7 +119,12 @@ class DynaSimEnv(gym.Env):
         total_cost = (self.w_adp * adp_cost) + (self.w_perf * perf_cost) + (self.w_res * res_cost)
 
         # reward function
-        reward = - total_cost
+        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
+                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
+            reward = 1
+        else:
+            reward = 0   # other non-considered cases, for example if the latency is above the thd
+
 
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
         # peak latency is above 2 seconds, penalize harder
@@ -155,7 +160,7 @@ class DynaSimEnv(gym.Env):
 
     def _next_observation(self):
         # observe the simulation status = (cpu, latency, overflow, num_ms)
-        latency, num_ms = self.dynasim.communicate_counters()
+        latency, num_ms, cpu = self.dynasim.communicate_counters()
         self.state = np.array([latency, num_ms])
         return self.state
 
