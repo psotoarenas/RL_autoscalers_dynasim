@@ -161,7 +161,7 @@ class DynaSimEnv(gym.Env):
     def _next_observation(self):
         # observe the simulation status = (cpu, latency, overflow, num_ms)
         latency, num_ms, cpu = self.dynasim.communicate_counters()
-        self.state = np.array([latency, num_ms])
+        self.state = np.array([latency, num_ms, cpu])
         return self.state
 
     def _take_action(self, action):
