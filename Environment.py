@@ -70,7 +70,7 @@ class DynaSimEnv(gym.Env):
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
 
         # The observation space is a 4-position vector with the metrics: num_ms, latency, cpu, overflow
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(2,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(3,), dtype=np.float32)
         self.state = None
         self.prev_state = None
 
