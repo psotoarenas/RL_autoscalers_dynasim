@@ -44,7 +44,6 @@ class DynaSimEnv(gym.Env):
         self.total_steps = 0
         self.acc_reward = 0
         self.num_restarts = 0
-        self.prev_state = None
 
         # define target latency = 20ms
         self.target_latency = 0.02
@@ -71,8 +70,9 @@ class DynaSimEnv(gym.Env):
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
 
         # The observation space is a 4-position vector with the metrics: num_ms, latency, cpu, overflow
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(4,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(2,), dtype=np.float32)
         self.state = None
+        self.prev_state = None
 
         # logger
         base_logger.default_extra = {'app_name': 'Environment', 'node': 'localhost'}
@@ -96,9 +96,9 @@ class DynaSimEnv(gym.Env):
 
         # observe the effect of the action on the simulation status, get the next state
         self.state = self._next_observation()
-        cpu, latency, overflow, num_ms = self.state
+        latency, num_ms = self.state
 
-        _, prev_latency, _, prev_ms = self.prev_state
+        prev_latency, prev_ms = self.prev_state
 
         # cost function
         ### adaptation cost
@@ -127,7 +127,7 @@ class DynaSimEnv(gym.Env):
         # todo: include a reset when the number of MS is lower than one (eliminates all the MS)
         if num_ms > 20 or latency > 2.:
             # hard penalization
-            reward = -100.
+            reward = -100
             done = True
             # the simulation is going to be restarted, print the accumulated steps
             base_logger.info(f"Total steps: {self.total_steps}")
@@ -146,14 +146,17 @@ class DynaSimEnv(gym.Env):
         # base_logger.info(f"Target: {self.target_latency}")
         base_logger.info(f"Cum Reward: {self.acc_reward}")
         self.prev_state = self.state
+        info = {'state': self.state,
+                'action': action,
+                'reward': reward,
+                }
 
-        return self.state, reward, done, {'num_ms': self.dynasim.number_of_ms, 'action': action,
-                                          'container_id': self.dynasim.container.id}
+        return self.state, reward, done, info
 
     def _next_observation(self):
         # observe the simulation status = (cpu, latency, overflow, num_ms)
-        cpu, latency, overflow, num_ms = self.dynasim.communicate_counters()
-        self.state = np.array([cpu, latency, overflow, num_ms])
+        latency, num_ms = self.dynasim.communicate_counters()
+        self.state = np.array([latency, num_ms])
         return self.state
 
     def _take_action(self, action):

@@ -108,7 +108,7 @@ env = DynaSimEnv(sim_length=sim_length,
                  w_res=args.w_res,
                  )
 # wrap it
-env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=88)
 
 ########################################################################################################################
 # Create Agent.

@@ -128,7 +128,7 @@ start = time.time()
 state = env.reset()
 for i in range(timesteps):
     # _states are only useful when using LSTM policies
-    action, _states = agent.predict(state)
+    action, _states = agent.predict(state, deterministic=True)
 
     state, reward, done, info = env.step(action)
 
