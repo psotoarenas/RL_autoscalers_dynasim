@@ -26,7 +26,7 @@ class DynaSimEnv(gym.Env):
     DECREASE = 1
     NOTHING = 2
 
-    def __init__(self, sim_length, ai_ip, ticks, report, mode="train", push=5557, pull=5556, w_adp=0.2, w_perf=0.6, w_res=0.2):
+    def __init__(self, sim_length, ai_ip, ticks, report, trace_file="trafficTrace.csv", mode="train", push=5557, pull=5556, w_adp=0.2, w_perf=0.6, w_res=0.2):
         print("Creating new Dynasim Env")
         super(DynaSimEnv, self).__init__()
         # Define action and observation space
@@ -34,7 +34,7 @@ class DynaSimEnv(gym.Env):
 
         # start communication with simulator in a thread
         print("Starting communication")
-        self.dynasim = DynaSim(mode=mode, push=push, pull=pull)
+        self.dynasim = DynaSim(mode=mode, push=push, pull=pull, trace_file=trace_file)
         self.zmq_com = threading.Thread(target=self.dynasim.run)
         self.zmq_com.daemon = True  # allows to kill the communication with the simulator
         self.zmq_com.start()
@@ -69,7 +69,7 @@ class DynaSimEnv(gym.Env):
         # Setting discrete actions:
         self.action_space = spaces.Discrete(self.N_DISCRETE_ACTIONS)
 
-        # The observation space is a 4-position vector with the metrics: num_ms, latency, cpu, overflow
+        # The observation space is a 3-position vector with the metrics: latency, num_ms, cpu
         self.observation_space = spaces.Box(low=0, high=np.inf, shape=(3,), dtype=np.float32)
         self.state = None
         self.prev_state = None

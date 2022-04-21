@@ -11,7 +11,7 @@ import shortuuid
 
 
 class DynaSim:
-    def __init__(self, mode, push, pull):
+    def __init__(self, mode, push, pull, trace_file):
         # communicator side
         self.push_socket = push
         self.pull_socket = pull
@@ -52,7 +52,7 @@ class DynaSim:
             self.tick = 0
         else:
             self.tick = 432000
-        with open('convergence_trace.csv') as f:
+        with open(trace_file) as f:
             self.job_list = [int(el) for el in f.read().split()]
         # random.seed(7)
 

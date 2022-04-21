@@ -28,6 +28,7 @@ parser.add_argument('--w_res', default=0.2, type=float, help='resource weight')
 parser.add_argument('--learning_rate', default=0.0001, type=float, help='learning rate')
 parser.add_argument('--gamma', default=0.99, type=float, help='gamma')
 parser.add_argument('--exploration_fraction', default=0.1, type=float, help='exploration fraction')
+parser.add_argument('--trace_file', default='trafficTrace.csv', type=str, help='trace filename')
 
 args = parser.parse_args()
 
@@ -100,6 +101,7 @@ env = DynaSimEnv(sim_length=sim_length,
                  ai_ip=args.ip,
                  ticks=args.ticks_per_second,
                  report=args.report_ticks,
+                 trace_file=args.trace_file,
                  mode='train',
                  pull=args.pull,
                  push=args.push,
@@ -122,7 +124,7 @@ agent = DQN(
     learning_rate=config["learning_rate"],
     gamma=config["gamma"],
     exploration_fraction=config["exploration_fraction"],
-    learning_starts=0 # starts leaarning right away, instead of waiting 50.000 steps
+    learning_starts=0 # starts learning right away, instead of waiting 50.000 steps
 )
 
 ########################################################################################################################
