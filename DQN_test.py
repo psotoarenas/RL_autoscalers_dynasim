@@ -14,9 +14,9 @@ import wandb
 ########################################################################################################################
 
 parser = argparse.ArgumentParser(description='RL training using sim-diasca')
-parser.add_argument('--sim_length', default=20000, type=int, help='Number of ticks per second to be simulated')
+parser.add_argument('--sim_length', default=1000000000, type=int, help='Number of ticks per second to be simulated')
 parser.add_argument('--ticks_per_second', default=1, type=int, help='Ticks per second')
-parser.add_argument('--report_ticks', default=5, type=int, help='How many ticks a report is generated')
+parser.add_argument('--report_ticks', default=2, type=int, help='How many ticks a report is generated')
 parser.add_argument('--ip', default='127.0.0.1', help='IP where the python (AI) script is running')
 parser.add_argument('--run_id', default='psotoarenas/DynamicSIM-RL/<run_id>', help='WANDB run_id')
 parser.add_argument('--push', default=5557, type=int, help='ZMQ push port')
@@ -63,6 +63,29 @@ results_dir = results_dir + "-" + str(last_exp + 1)
 os.makedirs(results_dir, exist_ok=True)
 
 ########################################################################################################################
+# Configure wandb
+########################################################################################################################
+
+run = wandb.init(
+    project="RL_autoscalers",
+    config=args,
+    sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+    monitor_gym=False,  # auto-upload the videos of agents playing the game
+    save_code=True,  # optional
+    )
+
+wandb.config.update({
+    "policy_type": "MlpPolicy",
+    "total_timesteps": timesteps,
+    "env_name": "Dynasim",
+    "agent_name": agent_name,
+    "mode": "test",
+    "run_id": wandb.run.id
+})
+
+config = wandb.config
+
+########################################################################################################################
 # Create and wrap the environment.
 ########################################################################################################################
 
@@ -75,30 +98,11 @@ env = DynaSimEnv(sim_length=sim_length,
                  push=args.push,
                  )
 # wrap it
-env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=88)
 
 ########################################################################################################################
 # Download Agent.
 ########################################################################################################################
-
-config = {
-    "policy_type": "MlpPolicy",
-    "total_timesteps": timesteps,
-    "env_name": "Dynasim",
-    "agent_name": agent_name,
-    "mode": "test"
-}
-
-run = wandb.init(
-    project="DynamicSIM-RL",
-    config=config,
-    sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-    monitor_gym=False,  # auto-upload the videos of agents playing the game
-    save_code=True,  # optional
-    )
-
-wandb.config.update(args)
-
 
 # Download Trained Agent
 api = wandb.Api()
