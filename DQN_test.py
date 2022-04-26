@@ -62,28 +62,6 @@ else:
 results_dir = results_dir + "-" + str(last_exp + 1)
 os.makedirs(results_dir, exist_ok=True)
 
-########################################################################################################################
-# Configure wandb
-########################################################################################################################
-
-run = wandb.init(
-    project="RL_autoscalers",
-    config=args,
-    sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-    monitor_gym=False,  # auto-upload the videos of agents playing the game
-    save_code=True,  # optional
-    )
-
-wandb.config.update({
-    "policy_type": "MlpPolicy",
-    "total_timesteps": timesteps,
-    "env_name": "Dynasim",
-    "agent_name": agent_name,
-    "mode": "test",
-    "run_id": wandb.run.id
-})
-
-config = wandb.config
 
 ########################################################################################################################
 # Create and wrap the environment.
@@ -113,6 +91,28 @@ for file in train_run.files():
         model = file.name
         print(f"Retrieving {model} from {args.run_id}")
         train_run.file(model).download(root=results_dir, replace=True)
+
+########################################################################################################################
+# Configure wandb
+########################################################################################################################
+
+run = wandb.init(
+    project="RL_autoscalers",
+    config=args,
+    sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+    monitor_gym=False,  # auto-upload the videos of agents playing the game
+    save_code=True,  # optional
+    )
+
+wandb.config.update({
+    "policy_type": "MlpPolicy",
+    "total_timesteps": timesteps,
+    "env_name": "Dynasim",
+    "agent_name": agent_name,
+    "mode": "test"
+})
+
+config = wandb.config
 
 ########################################################################################################################
 # Import Agent.
