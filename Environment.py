@@ -118,14 +118,33 @@ class DynaSimEnv(gym.Env):
 
         total_cost = (self.w_adp * adp_cost) + (self.w_perf * perf_cost) + (self.w_res * res_cost)
 
-        # reward function
-        if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
-                abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
+        # # reward 3: compound function
+        # reward = - total_cost
+
+        # # reward function 1
+        # if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
+        #         abs(cpu - self.target_cpu) < self.target_cpu * self.tolerance:
+        #     reward = 1
+        # else:
+        #     reward = 0   # other non-considered cases, for example if the latency is above the thd
+
+        # reward function 2+: rewarding good actions
+        if prev_latency > self.threshold and action == self.INCREASE and latency <= self.threshold:
+            reward = 1
+        elif prev_latency <= self.threshold and action == self.DECREASE and latency <= self.threshold:
             reward = 1
         else:
-            reward = 0   # other non-considered cases, for example if the latency is above the thd
+            reward = 0  # other non-considered cases
+        
+        # # reward function 2-: penalizing bad actions
+        # if prev_latency > self.threshold and action == self.DECREASE and latency >= self.threshold:
+        #     reward = -1
+        # elif prev_latency <= self.threshold and action == self.DECREASE and latency >= self.threshold:
+        #     reward = -1
+        # else:
+        #     reward = 0  # other non-considered cases
 
-
+        
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
         # peak latency is above 2 seconds, penalize harder
         done = False
