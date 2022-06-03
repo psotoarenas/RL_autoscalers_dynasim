@@ -128,21 +128,21 @@ class DynaSimEnv(gym.Env):
         # else:
         #     reward = 0   # other non-considered cases, for example if the latency is above the thd
 
-        # reward function 2+: rewarding good actions
-        if prev_latency > self.lat_threshold and action == self.INCREASE and latency <= self.lat_threshold:
-            reward = 1
-        elif prev_latency <= self.lat_threshold and action == self.DECREASE and latency <= self.lat_threshold:
-            reward = 1
-        else:
-            reward = 0  # other non-considered cases
-        
-        # # reward function 2-: penalizing bad actions
-        # if prev_latency > self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
-        #     reward = -1
-        # elif prev_latency <= self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
-        #     reward = -1
+        # # reward function 2+: rewarding good actions
+        # if prev_latency > self.lat_threshold and action == self.INCREASE and latency <= self.lat_threshold:
+        #     reward = 1
+        # elif prev_latency <= self.lat_threshold and action == self.DECREASE and latency <= self.lat_threshold:
+        #     reward = 1
         # else:
         #     reward = 0  # other non-considered cases
+        
+        # reward function 2-: penalizing bad actions
+        if prev_latency > self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
+            reward = -1
+        elif prev_latency <= self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
+            reward = -1
+        else:
+            reward = 0  # other non-considered cases
 
         
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
