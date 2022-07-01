@@ -74,7 +74,7 @@ os.makedirs(results_dir, exist_ok=True)
 ########################################################################################################################
 
 run = wandb.init(
-    project="RL_autoscalers",
+    project="RL-scalers-conf",
     config=args,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game

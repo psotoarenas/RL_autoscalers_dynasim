@@ -75,7 +75,7 @@ os.makedirs(results_dir, exist_ok=True)
 ########################################################################################################################
 
 run = wandb.init(
-    project="RL_autoscalers",
+    project="RL-scalers-conf",
     config=args,
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
     monitor_gym=False,  # auto-upload the videos of agents playing the game
@@ -110,7 +110,7 @@ env = DynaSimEnv(sim_length=sim_length,
                  w_res=args.w_res,
                  )
 # wrap it
-env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=88)
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=10)
 
 ########################################################################################################################
 # Create Agent.

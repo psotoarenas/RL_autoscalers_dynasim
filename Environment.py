@@ -119,7 +119,7 @@ class DynaSimEnv(gym.Env):
         total_cost = (self.w_adp * adp_cost) + (self.w_perf * perf_cost) + (self.w_res * res_cost)
 
         # # reward 3: compound function
-        # reward = - total_cost
+        reward = - total_cost
 
         # # reward function 1
         # if abs(latency - self.target_latency) < self.target_latency * self.tolerance or \
@@ -137,12 +137,12 @@ class DynaSimEnv(gym.Env):
         #     reward = 0  # other non-considered cases
         
         # reward function 2-: penalizing bad actions
-        if prev_latency > self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
-            reward = -1
-        elif prev_latency <= self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
-            reward = -1
-        else:
-            reward = 0  # other non-considered cases
+        # if prev_latency > self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
+        #     reward = -1
+        # elif prev_latency <= self.lat_threshold and action == self.DECREASE and latency >= self.lat_threshold:
+        #     reward = -1
+        # else:
+        #     reward = 0  # other non-considered cases
 
         
         # if the agent creates more than 20 MSs (one server is limited to 53 MS) or the
