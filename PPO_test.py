@@ -75,7 +75,7 @@ env = DynaSimEnv(sim_length=sim_length,
                  push=args.push,
                  )
 # wrap it
-env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=88)
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 
 ########################################################################################################################
 # Download Agent.
@@ -85,6 +85,7 @@ env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=88)
 api = wandb.Api()
 
 train_run = api.run(args.run_id)
+train_id = train_run.id
 for file in train_run.files():
     if file.name.startswith(agent_name):
         model = file.name
@@ -108,6 +109,7 @@ wandb.config.update({
     "total_timesteps": timesteps,
     "env_name": "Dynasim",
     "agent_name": agent_name,
+    "train_id": train_id,
     "mode": "test"
 })
 

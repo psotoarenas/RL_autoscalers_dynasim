@@ -141,5 +141,8 @@ cython_debug/
 #pycharm
 .idea/
 
+#vscode
+.vscode/
+
 # logs
 *logs

@@ -1,5 +1,6 @@
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import DQN
+from torch import seed
 from Environment import DynaSimEnv
 import time
 import argparse
@@ -8,6 +9,7 @@ import sys
 import base_logger
 import wandb
 from wandb.integration.sb3 import WandbCallback
+from stable_baselines3.common.callbacks import EvalCallback, CallbackList
 
 
 ########################################################################################################################
@@ -88,7 +90,7 @@ wandb.config.update({
     "env_name": "Dynasim",
     "agent_name": agent_name,
     "mode": "train",
-    "run_id": wandb.run.id
+    "train_id": wandb.run.id
 })
 
 config = wandb.config
@@ -110,7 +112,7 @@ env = DynaSimEnv(sim_length=sim_length,
                  w_res=args.w_res,
                  )
 # wrap it
-env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir, seed=10)
+env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 
 ########################################################################################################################
 # Create Agent.
@@ -124,7 +126,8 @@ agent = DQN(
     learning_rate=config["learning_rate"],
     gamma=config["gamma"],
     exploration_fraction=config["exploration_fraction"],
-    learning_starts=0 # starts learning right away, instead of waiting 50.000 steps
+    seed=928,
+    # learning_starts=0 # starts learning right away, instead of waiting 50.000 steps
 )
 
 ########################################################################################################################
@@ -138,8 +141,12 @@ start = time.time()
 # (episode termination). Thus, we might have episodes of different length
 # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
 # save to memory buffer and repeat for the number of timesteps.
-callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"models/{run.id}", verbose=2)
-agent.learn(total_timesteps=timesteps, callback=callback)
+wandb_callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"models/{run.id}", verbose=2)
+eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=500, deterministic=True, render=False)
+# Create the callback list
+callback = CallbackList([wandb_callback, eval_callback])
+
+agent.learn(total_timesteps=timesteps, callback=callback, seed=10)
 
 end = time.time()
 
