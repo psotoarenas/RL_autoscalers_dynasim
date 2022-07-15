@@ -46,22 +46,9 @@ base_logger.default_extra = {'app_name': f'{agent_name}', 'node': 'localhost'}
 # Create dir for saving results
 ########################################################################################################################
 
-
-results_dir = f"test-{agent_name}-{timesteps}-{args.report_ticks}"
-nb_exp = []
-for folder_name in os.listdir('./'):
-    if folder_name.startswith(results_dir):
-        nb_exp.append(int(folder_name.split("-")[-1]))
-if nb_exp:
-    nb_exp.sort()
-    last_exp = nb_exp[-1]
-else:
-    # first experiment
-    last_exp = -1
-
-results_dir = results_dir + "-" + str(last_exp + 1)
+timestr = time.strftime("%Y%m%d-%H%M%S")
+results_dir = f"test-{agent_name}-{timestr}"
 os.makedirs(results_dir, exist_ok=True)
-
 
 ########################################################################################################################
 # Create and wrap the environment.
@@ -88,7 +75,7 @@ api = wandb.Api()
 train_run = api.run(args.run_id)
 train_id = train_run.id
 for file in train_run.files():
-    if file.name.startswith(agent_name):
+    if file.name.startswith("best_model"):
         model = file.name
         print(f"Retrieving {model} from {args.run_id}")
         train_run.file(model).download(root=results_dir, replace=True)

@@ -56,20 +56,8 @@ base_logger.default_extra = {'app_name': f'{agent_name}', 'node': 'localhost'}
 # Create dir for saving results
 ########################################################################################################################
 
-
-results_dir = f"train-{agent_name}-{timesteps}-{args.report_ticks}"
-nb_exp = []
-for folder_name in os.listdir('./'):
-    if folder_name.startswith(results_dir):
-        nb_exp.append(int(folder_name.split("-")[-1]))
-if nb_exp:
-    nb_exp.sort()
-    last_exp = nb_exp[-1]
-else:
-    # first experiment
-    last_exp = -1
-
-results_dir = results_dir + "-" + str(last_exp + 1)
+timestr = time.strftime("%Y%m%d-%H%M%S")
+results_dir = f"train-{agent_name}-{timestr}"
 os.makedirs(results_dir, exist_ok=True)
 
 ########################################################################################################################
@@ -141,8 +129,8 @@ start = time.time()
 # (episode termination). Thus, we might have episodes of different length
 # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
 # save to memory buffer and repeat for the number of timesteps.
-wandb_callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"models/{run.id}", verbose=2)
-eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=500, deterministic=True, render=False)
+wandb_callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"{results_dir}/{run.id}", verbose=2)
+eval_callback = EvalCallback(env, best_model_save_path=f"{results_dir}/{run.id}", log_path=f"{results_dir}/{run.id}", eval_freq=500, deterministic=True, render=False)
 # Create the callback list
 callback = CallbackList([wandb_callback, eval_callback])
 
@@ -156,12 +144,9 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-agent_name = f"{agent_name}-{timesteps}-{args.report_ticks}-{last_exp + 1}"
-
-print(f"Saving agent as {agent_name}")
-agent.save(os.path.join(results_dir, agent_name))
+print(f"Saving and uploading agent")
 # upload data to wandb server
-agent.save(os.path.join(wandb.run.dir, agent_name+".zip"))
+agent.save(os.path.join(wandb.run.dir, "best_model.zip"))
 wandb.config.execution_time = end - start
 wandb.save("Environment.py")
 logger = base_logger.file_handler.baseFilename.split("/")[-1]
