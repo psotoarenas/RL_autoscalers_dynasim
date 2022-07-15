@@ -146,7 +146,7 @@ eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./lo
 # Create the callback list
 callback = CallbackList([wandb_callback, eval_callback])
 
-agent.learn(total_timesteps=timesteps, callback=callback, seed=10)
+agent.learn(total_timesteps=timesteps, callback=callback)
 
 end = time.time()
 
