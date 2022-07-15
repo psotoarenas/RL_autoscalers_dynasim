@@ -1,6 +1,5 @@
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import DQN
-from torch import seed
 from Environment import DynaSimEnv
 import time
 import argparse
@@ -110,11 +109,11 @@ env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 agent = DQN(
     config["policy_type"],
     env, verbose=1,
-    tensorboard_log=f"runs/{run.id}",
+    tensorboard_log=f"{results_dir}/{run.id}",
     learning_rate=config["learning_rate"],
     gamma=config["gamma"],
     exploration_fraction=config["exploration_fraction"],
-    seed=928,
+    # seed=928,
     # learning_starts=0 # starts learning right away, instead of waiting 50.000 steps
 )
 
@@ -144,7 +143,7 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-print(f"Saving and uploading agent")
+print("Saving and uploading agent")
 # upload data to wandb server
 agent.save(os.path.join(wandb.run.dir, "best_model.zip"))
 wandb.config.execution_time = end - start

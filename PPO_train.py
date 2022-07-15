@@ -8,6 +8,7 @@ import sys
 import base_logger
 import wandb
 from wandb.integration.sb3 import WandbCallback
+from stable_baselines3.common.callbacks import EvalCallback, CallbackList
 
 
 ########################################################################################################################
@@ -54,19 +55,8 @@ base_logger.default_extra = {'app_name': f'{agent_name}', 'node': 'localhost'}
 ########################################################################################################################
 
 
-results_dir = f"train-{agent_name}-{timesteps}-{args.report_ticks}"
-nb_exp = []
-for folder_name in os.listdir('./'):
-    if folder_name.startswith(results_dir):
-        nb_exp.append(int(folder_name.split("-")[-1]))
-if nb_exp:
-    nb_exp.sort()
-    last_exp = nb_exp[-1]
-else:
-    # first experiment
-    last_exp = -1
-
-results_dir = results_dir + "-" + str(last_exp + 1)
+timestr = time.strftime("%Y%m%d-%H%M%S")
+results_dir = f"train-{agent_name}-{timestr}"
 os.makedirs(results_dir, exist_ok=True)
 
 ########################################################################################################################
@@ -87,7 +77,7 @@ wandb.config.update({
     "env_name": "Dynasim",
     "agent_name": agent_name,
     "mode": "train",
-    "run_id": wandb.run.id
+    "train_id": wandb.run.id
 })
 
 config = wandb.config
@@ -119,7 +109,7 @@ env = make_vec_env(lambda: env, n_envs=1, monitor_dir=results_dir)
 agent = PPO(
     config["policy_type"],
     env, verbose=1,
-    tensorboard_log=f"runs/{run.id}",
+    tensorboard_log=f"{results_dir}/{run.id}",
     learning_rate=config["learning_rate"],
     gamma=config["gamma"]
 )
@@ -135,7 +125,11 @@ start = time.time()
 # (episode termination). Thus, we might have episodes of different length
 # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
 # save to memory buffer and repeat for the number of timesteps.
-callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"models/{run.id}", verbose=2)
+wandb_callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"{results_dir}/{run.id}", verbose=2)
+eval_callback = EvalCallback(env, best_model_save_path=f"{results_dir}/{run.id}", log_path=f"{results_dir}/{run.id}", eval_freq=500, deterministic=True, render=False)
+# Create the callback list
+callback = CallbackList([wandb_callback, eval_callback])
+
 agent.learn(total_timesteps=timesteps, callback=callback)
 
 end = time.time()
@@ -146,12 +140,9 @@ base_logger.info(f"Agent end training. Elapsed time: {end - start}")
 # Save Agent.
 ########################################################################################################################
 
-agent_name = f"{agent_name}-{timesteps}-{args.report_ticks}-{last_exp + 1}"
-
-print(f"Saving agent as {agent_name}")
-agent.save(os.path.join(results_dir, agent_name))
+print("Saving and uploading agent")
 # upload data to wandb server
-agent.save(os.path.join(wandb.run.dir, agent_name+".zip"))
+agent.save(os.path.join(wandb.run.dir, "best_model.zip"))
 wandb.config.execution_time = end - start
 wandb.save("Environment.py")
 logger = base_logger.file_handler.baseFilename.split("/")[-1]
