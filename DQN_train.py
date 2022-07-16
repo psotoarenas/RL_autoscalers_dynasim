@@ -128,10 +128,10 @@ start = time.time()
 # (episode termination). Thus, we might have episodes of different length
 # inside the learn loop: reset the environment, make an observation, take an  action, obtain reward,
 # save to memory buffer and repeat for the number of timesteps.
-wandb_callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"{results_dir}/{run.id}", verbose=2)
-eval_callback = EvalCallback(env, best_model_save_path=f"{results_dir}/{run.id}", log_path=f"{results_dir}/{run.id}", eval_freq=500, deterministic=True, render=False)
+callback = WandbCallback(gradient_save_freq=100, model_save_freq=1000, model_save_path=f"{results_dir}/{run.id}", verbose=2)
+# eval_callback = EvalCallback(env, best_model_save_path=f"{results_dir}/{run.id}", log_path=f"{results_dir}/{run.id}", eval_freq=500, deterministic=True, render=False)
 # Create the callback list
-callback = CallbackList([wandb_callback, eval_callback])
+# callback = CallbackList([wandb_callback, eval_callback])
 
 agent.learn(total_timesteps=timesteps, callback=callback)
 

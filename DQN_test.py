@@ -75,7 +75,7 @@ api = wandb.Api()
 train_run = api.run(args.run_id)
 train_id = train_run.id
 for file in train_run.files():
-    if file.name.startswith("best_model"):
+    if file.name.startswith("model"):
         model = file.name
         print(f"Retrieving {model} from {args.run_id}")
         train_run.file(model).download(root=results_dir, replace=True)
